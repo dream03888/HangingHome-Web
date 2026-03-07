@@ -1,0 +1,98 @@
+<div class="page-container" style="max-width: 800px; margin: 0 auto;">
+    <div class="page-header">
+        <div>
+            <h2 class="page-title">{{ isEditMode ? ('USER.EDIT_TITLE' | translate) : ('USER.CREATE_TITLE' | translate)
+                }}</h2>
+        </div>
+        <button class="btn-secondary" routerLink="../">
+            {{ 'COMMON.CANCEL' | translate }}
+        </button>
+    </div>
+
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="form-card">
+        <div class="form-section">
+            <div class="form-group">
+                <label for="username">{{ 'USER.USERNAME' | translate }} <span class="required">*</span></label>
+                <input type="text" id="username" formControlName="username" class="form-control">
+            </div>
+
+            <div class="form-group" *ngIf="!isEditMode">
+                <label for="password">{{ 'USER.PASS' | translate }} <span class="required">*</span></label>
+                <input type="password" id="password" formControlName="password" class="form-control">
+                <p class="help-text">{{ 'USER.PASS_HELP' | translate }}</p>
+            </div>
+
+            <div class="form-group" *ngIf="isEditMode">
+                <label for="password">{{ 'USER.PASS' | translate }} <span class="text-muted">(Optional)</span></label>
+                <input type="password" id="password" formControlName="password" class="form-control">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label for="f_name">First Name</label>
+                    <input type="text" id="f_name" formControlName="f_name" class="form-control" placeholder="John">
+                </div>
+                <div class="form-group flex-1">
+                    <label for="l_name">Last Name</label>
+                    <input type="text" id="l_name" formControlName="l_name" class="form-control" placeholder="Doe">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label for="emp_code">Employee Code</label>
+                    <input type="text" id="emp_code" formControlName="emp_code" class="form-control"
+                        placeholder="EMP001">
+                </div>
+                <div class="form-group flex-1">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" formControlName="phone" class="form-control" placeholder="0812345678">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="role">{{ 'USER.ROLE' | translate }} <span class="required">*</span></label>
+                <select id="role" formControlName="role" class="form-control">
+                    <option value="storeadmin">{{ 'USER.ROLE_STORE' | translate }}</option>
+                    <option value="superadmin">{{ 'USER.ROLE_SUPER' | translate }}</option>
+                </select>
+            </div>
+
+            <ng-container *ngIf="userForm.get('role')?.value === 'storeadmin'">
+                <div class="form-group">
+                    <label for="storeId">{{ 'USER.BIND_STORE' | translate }}</label>
+                    <select id="storeId" formControlName="storeId" class="form-control">
+                        <option value="">-- Select Assigned Store --</option>
+                        <option *ngFor="let store of stores" [value]="store.id">
+                            {{ store.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ 'USER.PERM_TITLE' | translate }}</label>
+                    <div class="permissions-checkboxes">
+                        <label class="checkbox-container" *ngFor="let perm of availablePermissions">
+                            <input type="checkbox" [value]="perm.value" [checked]="isPermissionSelected(perm.value)"
+                                (change)="onPermissionToggle($event)">
+                            <span class="checkmark"></span>
+                            <div class="perm-info">
+                                <strong>{{ perm.label | translate }}</strong>
+                                <span>Internal id: {{ perm.value }}</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary" routerLink="../">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button type="submit" class="btn-primary" [disabled]="userForm.invalid">
+                {{ isEditMode ? ('COMMON.SAVE' | translate) : ('COMMON.CREATE' | translate) }}
+            </button>
+        </div>
+    </form>
+</div>

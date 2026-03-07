@@ -1,0 +1,194 @@
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+
+    .page-title {
+        margin: 0 0 8px 0;
+        font-size: 1.875rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+
+    .page-subtitle {
+        margin: 0;
+        color: var(--text-sub);
+    }
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green-primary);
+    color: var(--text-main);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: var(--green-accent);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+}
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.user-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: all 0.2s;
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.user-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+
+    &.superadmin {
+        background: rgba(102, 187, 106, 0.2);
+        color: var(--green-accent);
+    }
+
+    &.storeadmin {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-sub);
+    }
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+
+    .btn-icon {
+        background: transparent;
+        border: none;
+        color: var(--text-sub);
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        &.text-red:hover {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.1);
+        }
+    }
+}
+
+.card-body {
+    .user-name {
+        margin: 0 0 8px 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    p.user-detail {
+        margin: 0.25rem 0;
+        font-size: 0.85rem;
+        color: #555;
+
+        strong {
+            font-weight: 600;
+            color: #333;
+        }
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+        margin-bottom: 12px;
+
+        &.superadmin {
+            background: rgba(102, 187, 106, 0.15);
+            color: var(--green-accent);
+        }
+
+        &.storeadmin {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-sub);
+            border: 1px solid var(--border-soft);
+        }
+    }
+
+    .user-desc {
+        margin: 0;
+        color: var(--text-sub);
+        font-size: 0.875rem;
+    }
+}
+
+.permissions-list {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+
+    .permissions-title {
+        margin: 0 0 8px 0;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--text-sub);
+    }
+
+    .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .perm-badge {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-sub);
+        border: 1px dashed var(--border-soft);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        text-transform: capitalize;
+    }
+}

@@ -1,0 +1,233 @@
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <button class="btn-icon header-back" (click)="goBack()" [title]="'COMMON.BACK' | translate">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </button>
+            <div>
+                <h2 class="page-title">{{ isEditMode ? ('MENU.EDIT_TITLE' | translate) : ('MENU.CREATE_TITLE' |
+                    translate) }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <div class="form-main">
+            <form [formGroup]="menuForm" (ngSubmit)="onSubmit()" class="form-card">
+
+                <!-- Name -->
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="name">{{ 'MENU.NAME' | translate }} (TH)<span class="required">*</span></label>
+                        <input type="text" id="name" formControlName="name" class="form-control"
+                            [class.is-invalid]="menuForm.get('name')?.invalid && menuForm.get('name')?.touched"
+                            placeholder="e.g. ลาเต้เย็น">
+                        <div class="error-feedback"
+                            *ngIf="menuForm.get('name')?.invalid && menuForm.get('name')?.touched">
+                            Item name is required (min 2 characters)
+                        </div>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="nameEn">{{ 'MENU.NAME' | translate }} (EN)</label>
+                        <input type="text" id="nameEn" formControlName="nameEn" class="form-control"
+                            placeholder="e.g. Iced Latte">
+                    </div>
+                </div>
+
+                <!-- Price & Status Row -->
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="price">{{ 'MENU.PRICE' | translate }} <span class="required">*</span></label>
+                        <div class="input-with-icon">
+                            <span class="currency-icon">฿</span>
+                            <input type="number" id="price" formControlName="price" class="form-control pl-8"
+                                [class.is-invalid]="menuForm.get('price')?.invalid && menuForm.get('price')?.touched"
+                                placeholder="0">
+                        </div>
+                        <div class="error-feedback"
+                            *ngIf="menuForm.get('price')?.invalid && menuForm.get('price')?.touched">
+                            Valid price is required
+                        </div>
+                    </div>
+
+                    <div class="form-group flex-1">
+                        <label>{{ 'MENU.AVAILABILITY' | translate }}</label>
+                        <div class="toggle-wrapper">
+                            <label class="toggle-switch">
+                                <input type="checkbox" formControlName="isActive">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="toggle-label">{{ menuForm.get('isActive')?.value ? ('MENU.AVAILABLE' |
+                                translate) : ('MENU.UNAVAILABLE' | translate) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Discount Section -->
+                <div class="form-group">
+                    <div class="discount-header">
+                        <label class="mb-0">{{ 'MENU.DISCOUNT_OPT' | translate }}</label>
+                        <label class="toggle-switch small">
+                            <input type="checkbox" formControlName="hasDiscount">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="discount-config" *ngIf="menuForm.get('hasDiscount')?.value">
+                        <div class="form-row mt-3">
+                            <div class="form-group flex-1 mb-0">
+                                <label for="discountType">{{ 'MENU.TYPE' | translate }}</label>
+                                <select id="discountType" formControlName="discountType" class="form-control">
+                                    <option value="percentage">{{ 'MENU.PERCENT' | translate }}</option>
+                                    <option value="amount">{{ 'MENU.AMOUNT' | translate }}</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-1 mb-0">
+                                <label for="discountValue">{{ 'MENU.VALUE' | translate }}</label>
+                                <input type="number" id="discountValue" formControlName="discountValue"
+                                    class="form-control" placeholder="0">
+                            </div>
+                        </div>
+                        <p class="help-text">
+                            {{ 'MENU.FINAL_PRICE' | translate }}:
+                            <strong>
+                                {{
+                                menuForm.get('discountType')?.value === 'percentage'
+                                ? (menuForm.get('price')?.value * (1 - menuForm.get('discountValue')?.value / 100))
+                                : (menuForm.get('price')?.value - menuForm.get('discountValue')?.value) | number:'1.0-0'
+                                }} THB
+                            </strong>
+                        </p>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Options / Add-ons Section -->
+                <div class="form-group">
+                    <div class="options-header">
+                        <h3>{{ 'OPTION.TITLE' | translate }}</h3>
+                        <button type="button" class="btn-secondary small-btn" (click)="addOption()">{{ 'OPTION.ADD' |
+                            translate }}</button>
+                    </div>
+                    <p class="help-text mb-3">{{ 'OPTION.SUB' | translate }}</p>
+
+                    <div formArrayName="options" class="options-list">
+                        <div class="option-card" *ngFor="let opt of options.controls; let i = index"
+                            [formGroupName]="i">
+                            <div class="option-card-header">
+                                <div class="form-group flex-1 mb-0 mr-2">
+                                    <input type="text" formControlName="name" class="form-control option-name-input"
+                                        [placeholder]="('OPTION.NAME' | translate) + ' (TH)'">
+                                </div>
+                                <div class="form-group flex-1 mb-0">
+                                    <input type="text" formControlName="nameEn" class="form-control option-name-input"
+                                        [placeholder]="('OPTION.NAME' | translate) + ' (EN)'">
+                                </div>
+                                <button type="button" class="btn-icon remove-btn" (click)="removeOption(i)"
+                                    title="Remove Option">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="option-card-settings">
+                                <label class="checkbox-container inline">
+                                    <input type="checkbox" formControlName="isRequired">
+                                    <span class="checkmark"></span>
+                                    {{ 'OPTION.REQUIRED' | translate }}
+                                </label>
+                                <label class="checkbox-container inline">
+                                    <input type="checkbox" formControlName="isMultiple">
+                                    <span class="checkmark"></span>
+                                    {{ 'OPTION.MULTIPLE' | translate }}
+                                </label>
+                            </div>
+
+                            <div class="choices-container" formArrayName="choices">
+                                <h4>{{ 'OPTION.CHOICES' | translate }}</h4>
+                                <div class="choice-row" *ngFor="let choice of getChoices(i).controls; let j = index"
+                                    [formGroupName]="j">
+                                    <input type="text" formControlName="name" class="form-control flex-1 mr-2"
+                                        [placeholder]="('OPTION.CHOICE_NAME' | translate) + ' (TH)'">
+                                    <input type="text" formControlName="nameEn" class="form-control flex-1"
+                                        [placeholder]="('OPTION.CHOICE_NAME' | translate) + ' (EN)'">
+                                    <div class="input-with-icon flex-1">
+                                        <span class="currency-icon">+฿</span>
+                                        <input type="number" formControlName="price" class="form-control pl-10"
+                                            placeholder="0">
+                                    </div>
+                                    <button type="button" class="btn-icon remove-btn" (click)="removeChoice(i, j)"
+                                        title="Remove Choice">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <button type="button" class="btn-link mt-2" (click)="addChoice(i)">{{
+                                    'OPTION.ADD_CHOICE' | translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label for="imageUrl">{{ 'MENU.IMAGE_PREVIEW' | translate }} <span
+                            class="text-muted">(Optional)</span></label>
+                    <input type="file" id="imageUrl" (change)="onFileSelected($event)" accept="image/*"
+                        class="form-control">
+                    <p class="help-text">Select an image file from your computer.</p>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" (click)="goBack()">{{ 'COMMON.CANCEL' | translate
+                        }}</button>
+                    <button
+                        *ngIf="authService.hasPermission('manage_menus') || (authService.hasPermission('toggle_menu') && isEditMode)"
+                        type="submit" class="btn-primary" [disabled]="menuForm.invalid">
+                        {{ isEditMode ? ('COMMON.SAVE' | translate) : ('COMMON.CREATE' | translate) }}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Image Preview Sidebar -->
+        <div class="form-sidebar">
+            <div class="preview-card">
+                <h3>{{ 'MENU.IMAGE_PREVIEW' | translate }}</h3>
+                <div class="image-preview-container">
+                    <img *ngIf="imagePreview" [src]="imagePreview" alt="Menu Preview" (error)="imagePreview = null">
+                    <div class="no-image" *ngIf="!imagePreview">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <span>{{ 'MENU.NO_IMAGE' | translate }}</span>
+                    </div>
+                </div>
+                <div class="preview-info" *ngIf="menuForm.get('name')?.value">
+                    <h4>{{ menuForm.get('name')?.value }}</h4>
+                    <p class="price">{{ menuForm.get('price')?.value | currency:'THB':'symbol-narrow':'1.0-0' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

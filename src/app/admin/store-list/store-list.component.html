@@ -1,0 +1,63 @@
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h2 class="page-title">{{ 'STORE.LIST_TITLE' | translate }}</h2>
+            <p class="page-subtitle">{{ 'STORE.LIST_SUB' | translate }}</p>
+        </div>
+        <button class="btn-primary" routerLink="new" *ngIf="authService.isSuperAdmin()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            {{ 'STORE.ADD_BTN' | translate }}
+        </button>
+    </div>
+
+    <div class="store-grid" *ngIf="stores">
+        <div class="store-card" *ngFor="let store of stores">
+            <div class="card-header">
+                <div class="store-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div class="actions" *ngIf="authService.isSuperAdmin()">
+                    <button class="btn-icon" [routerLink]="[store.id, 'edit']" [title]="'COMMON.EDIT' | translate">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <h3 class="store-name">{{ store.name }}</h3>
+                <p class="store-desc">{{ store.description || 'No description provided' }}</p>
+            </div>
+
+            <div class="card-footer">
+                <button class="btn-secondary w-full" [routerLink]="[store.id, 'menus']">
+                    {{ 'STORE.MANAGE_MENU' | translate }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="stores.length === 0">
+            <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                </svg>
+            </div>
+            <h3>No Stores Found</h3>
+            <p>Get started by creating your first store branch.</p>
+            <button class="btn-primary mt-4" routerLink="new">Create Store</button>
+        </div>
+    </div>
+</div>

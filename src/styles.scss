@@ -1,1 +1,141 @@
 /* You can add global styles to this file, and also import other style files */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0b0f17;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* =======================================
+   HANGING RESTAURANT – GREEN THEME
+   Global Design Tokens
+======================================= */
+
+:root {
+
+    /* ===== Background ===== */
+    --bg-dark: #0f1c14;
+    --bg-panel: #16261c;
+    --bg-glass: rgba(26, 45, 32, 0.72);
+
+    /* ===== Brand Colors ===== */
+    --green-primary: #2e7d32;
+    --green-accent: #66bb6a;
+    --green-soft: #a5d6a7;
+
+    /* ===== Text ===== */
+    --text-main: #f1f8f4;
+    --text-sub: rgba(241, 248, 244, .65);
+
+    /* ===== Borders ===== */
+    --border-soft: rgba(255, 255, 255, .08);
+    --border-hover: rgba(255, 255, 255, .15);
+
+    /* ===== Gradients ===== */
+    --gradient-green: linear-gradient(180deg, var(--green-accent), var(--green-primary));
+
+    /* ===== Shadows ===== */
+    --shadow-soft: 0 18px 60px rgba(0, 0, 0, .35);
+    --shadow-panel: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Base resets for global elements within admin */
+* {
+    box-sizing: border-box;
+}
+
+/* =======================================
+   PREMIUM TOGGLE SWITCH
+======================================= */
+.toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 46px;
+    /* Match input height */
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.toggle-switch {
+    --toggle-width: 50px;
+    --toggle-height: 28px;
+    --toggle-padding: 3px;
+    --toggle-bg-off: rgba(255, 255, 255, 0.15);
+    --toggle-bg-on: var(--green-primary);
+    --toggle-handle-size: calc(var(--toggle-height) - (var(--toggle-padding) * 2));
+
+    position: relative;
+    display: inline-block;
+    width: var(--toggle-width);
+    height: var(--toggle-height);
+    flex-shrink: 0;
+
+    &.small {
+        --toggle-width: 38px;
+        --toggle-height: 22px;
+        --toggle-padding: 2px;
+    }
+
+    input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--toggle-bg-off);
+        transition: background-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border-radius: 9999px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+
+        &:before {
+            position: absolute;
+            content: "";
+            height: var(--toggle-handle-size);
+            width: var(--toggle-handle-size);
+            left: var(--toggle-padding);
+            bottom: var(--toggle-padding);
+            background-color: #ffffff;
+            transition: transform 0.4s cubic-bezier(0.25, 1.5, 0.5, 1), box-shadow 0.2s ease;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    input:checked+.slider {
+        background-color: var(--toggle-bg-on);
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    input:focus-visible+.slider {
+        outline: 2px solid var(--green-accent);
+        outline-offset: 2px;
+    }
+
+    input:active+.slider:before {
+        width: calc(var(--toggle-handle-size) + 6px);
+    }
+
+    input:checked:active+.slider:before {
+        transform: translateX(calc(var(--toggle-width) - var(--toggle-handle-size) - (var(--toggle-padding) * 2) - 6px));
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(calc(var(--toggle-width) - var(--toggle-handle-size) - (var(--toggle-padding) * 2)));
+        box-shadow: -1px 2px 4px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.1);
+    }
+}
