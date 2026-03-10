@@ -7,6 +7,8 @@ export interface IResponseMessage {
   header: string;
   msg: any;
   errorMessage?: unknown;
+  token?: string;
+  user?: any;
 }
 
 export type IResponseStatus = 200 | 201 | 404 | 500
@@ -17,10 +19,19 @@ export class ApisService {
 
   constructor(private socket: SocketSupplyService) { }
 
-  async CreateStore(name: string, description: string): Promise<IResponseMessage> {
-    await this.socket.emit('CreateStore', { name, description });
+  async CreateStore(name: string, name_eng: string, description: string, is_stock_enabled: boolean = false): Promise<IResponseMessage> {
+    await this.socket.emit('CreateStore', { name, name_eng, description, is_stock_enabled });
     return await this.socket
       .fromOneTimeEvent<IResponseMessage>('return_CreateStore')
+      .then((response) => {
+        return response;
+      });
+  }
+
+  async UpdateStore(id: string, name: string, name_eng: string, description: string, is_stock_enabled: boolean = false): Promise<IResponseMessage> {
+    await this.socket.emit('updateStore', { id, name, name_eng, description, is_stock_enabled });
+    return await this.socket
+      .fromOneTimeEvent<IResponseMessage>('return_updateStore')
       .then((response) => {
         return response;
       });
@@ -32,6 +43,15 @@ export class ApisService {
     await this.socket.emit('getStore');
     return await this.socket
       .fromOneTimeEvent<IResponseMessage>('return_getStore')
+      .then((response) => {
+        return response;
+      });
+  }
+
+  async deleteStore(id: string): Promise<IResponseMessage> {
+    await this.socket.emit('deleteStore', id);
+    return await this.socket
+      .fromOneTimeEvent<IResponseMessage>('return_deleteStore')
       .then((response) => {
         return response;
       });
@@ -88,6 +108,27 @@ export class ApisService {
   }
 
   // --- User Management ---
+  async login(credentials: any): Promise<IResponseMessage> {
+    await this.socket.emit('login', credentials);
+    return await this.socket
+      .fromOneTimeEvent<IResponseMessage>('return_login')
+      .then(response => response);
+  }
+
+  async verifySession(data: { id: string, token: string }): Promise<IResponseMessage> {
+    await this.socket.emit('verifySession', data);
+    return await this.socket
+      .fromOneTimeEvent<IResponseMessage>('return_verifySession')
+      .then(response => response);
+  }
+
+  async logoutSession(userId: string): Promise<IResponseMessage> {
+    await this.socket.emit('logoutSession', userId);
+    return await this.socket
+      .fromOneTimeEvent<IResponseMessage>('return_logoutSession')
+      .then(response => response);
+  }
+
   async getUsers(): Promise<IResponseMessage> {
     await this.socket.emit('getUsers');
     return await this.socket
@@ -131,4 +172,50 @@ export class ApisService {
       .then(response => response);
   }
 
+  // --- Inventory & Stock --- //
+  async getIngredients(storeId: string): Promise<IResponseMessage> {
+    await this.socket.emit('getIngredients', storeId);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getIngredients');
+  }
+
+  async createIngredient(data: any): Promise<IResponseMessage> {
+    await this.socket.emit('createIngredient', data);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_createIngredient');
+  }
+
+  async updateIngredient(data: any): Promise<IResponseMessage> {
+    await this.socket.emit('updateIngredient', data);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_updateIngredient');
+  }
+
+  async deleteIngredient(id: number): Promise<IResponseMessage> {
+    await this.socket.emit('deleteIngredient', id);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_deleteIngredient');
+  }
+
+  async getStockTransactions(storeId: string): Promise<IResponseMessage> {
+    await this.socket.emit('getStockTransactions', storeId);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getStockTransactions');
+  }
+
+  async createTransaction(data: any): Promise<IResponseMessage> {
+    await this.socket.emit('createTransaction', data);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_createTransaction');
+  }
+
+  async getRecipe(productId: string): Promise<IResponseMessage> {
+    await this.socket.emit('getRecipe', productId);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getRecipe');
+  }
+
+  async upsertRecipe(productId: string, items: any[]): Promise<IResponseMessage> {
+    await this.socket.emit('upsertRecipe', { product_id: productId, items });
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_upsertRecipe');
+  }
+
+  // --- Kiosk / Order Execution --- //
+  async placeOrder(payload: any): Promise<IResponseMessage> {
+    await this.socket.emit('placeOrder', payload);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_placeOrder');
+  }
 }

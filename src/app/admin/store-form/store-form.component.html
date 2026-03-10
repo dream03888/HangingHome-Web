@@ -19,15 +19,23 @@
         <form [formGroup]="storeForm" (ngSubmit)="onSubmit()">
 
             <!-- Store Name -->
-            <div class="form-group">
-                <label for="name">{{ 'STORE.NAME' | translate }} <span class="required">*</span></label>
-                <input type="text" id="name" formControlName="name" class="form-control"
-                    [class.is-invalid]="storeForm.get('name')?.invalid && storeForm.get('name')?.touched"
-                    placeholder="e.g. Premium Coffee Shop Sukhumvit">
-                <div class="error-feedback" *ngIf="storeForm.get('name')?.invalid && storeForm.get('name')?.touched">
-                    <span *ngIf="storeForm.get('name')?.errors?.['required']">Store name is required</span>
-                    <span *ngIf="storeForm.get('name')?.errors?.['minlength']">Store name must be at least 3
-                        characters</span>
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label for="name">{{ 'STORE.NAME' | translate }} (TH) <span class="required">*</span></label>
+                    <input type="text" id="name" formControlName="name" class="form-control"
+                        [class.is-invalid]="storeForm.get('name')?.invalid && storeForm.get('name')?.touched"
+                        placeholder="e.g. สาขาสุขุมวิท">
+                    <div class="error-feedback"
+                        *ngIf="storeForm.get('name')?.invalid && storeForm.get('name')?.touched">
+                        <span *ngIf="storeForm.get('name')?.errors?.['required']">Store name is required</span>
+                        <span *ngIf="storeForm.get('name')?.errors?.['minlength']">Store name must be at least 3
+                            characters</span>
+                    </div>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="nameEn">{{ 'STORE.NAME' | translate }} (EN)</label>
+                    <input type="text" id="nameEn" formControlName="nameEn" class="form-control"
+                        placeholder="e.g. Sukhumvit Branch">
                 </div>
             </div>
 
@@ -36,6 +44,23 @@
                 <label for="description">{{ 'STORE.DESC' | translate }} <span
                         class="text-muted">(Optional)</span></label>
                 <textarea id="description" formControlName="description" class="form-control" rows="4"></textarea>
+            </div>
+
+            <!-- Stock Management Toggle (SuperAdmin Only) -->
+            <div class="form-group" style="margin-top: 1rem;" *ngIf="authService.isSuperAdmin()">
+                <label class="toggle-container"
+                    style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface);">
+                    <div class="toggle-info" style="flex: 1;">
+                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">Enable Stock Management
+                            (Phase 3)</span>
+                        <span style="font-size: 0.875rem; color: var(--text-sub);">Opt-in inventory tracking, recipe
+                            BOMs, and raw material alerts for this store.</span>
+                    </div>
+                    <label class="toggle-switch ml-4">
+                        <input type="checkbox" formControlName="isStockEnabled">
+                        <span class="slider"></span>
+                    </label>
+                </label>
             </div>
 
             <!-- Actions -->

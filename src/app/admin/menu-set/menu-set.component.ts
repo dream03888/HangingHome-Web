@@ -27,7 +27,6 @@ export class MenuSetComponent implements OnInit {
   storeId!: string;
   store: Store | undefined;
   menuSets$!: Observable<MenuSet[]>;
-  availableMenus$: Observable<Menu[]> = new Observable();
   menus: Menu[] = [];
 
   showForm = false;

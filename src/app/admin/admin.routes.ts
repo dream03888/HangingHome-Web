@@ -7,6 +7,10 @@ import { MenuFormComponent } from './menu-form/menu-form.component';
 import { MenuSetComponent } from './menu-set/menu-set.component';
 import { StoreAccessGuard } from './guards/store-access.guard';
 import { SuperAdminGuard } from './guards/super-admin.guard';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { InventoryListComponent } from './inventory-list/inventory-list.component';
+import { StockTransactionComponent } from './stock-transaction/stock-transaction.component';
+import { RecipeManagerComponent } from './recipe-manager/recipe-manager.component';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -21,6 +25,11 @@ export const ADMIN_ROUTES: Routes = [
       { path: 'stores/:storeId/menus/new', component: MenuFormComponent, canActivate: [StoreAccessGuard] },
       { path: 'stores/:storeId/menus/:menuId/edit', component: MenuFormComponent, canActivate: [StoreAccessGuard] },
       { path: 'stores/:storeId/menu-sets', component: MenuSetComponent, canActivate: [StoreAccessGuard] },
+
+      // Inventory
+      { path: 'stores/:storeId/inventory', component: InventoryListComponent, canActivate: [StoreAccessGuard] },
+      { path: 'stores/:storeId/transactions', component: StockTransactionComponent, canActivate: [StoreAccessGuard] },
+      { path: 'stores/:storeId/recipes/:productId', component: RecipeManagerComponent, canActivate: [StoreAccessGuard] },
 
       // Dashboard
       {

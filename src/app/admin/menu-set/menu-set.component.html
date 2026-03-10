@@ -45,7 +45,7 @@
                     placeholder="e.g. Breakfast Combo">
             </div>
 
-            <div class="form-group" *ngIf="availableMenus$ | async as menus">
+            <div class="form-group" *ngIf="menus && menus.length > 0">
                 <label>{{ 'SET.SELECT_ITEMS' | translate }}</label>
                 <p class="help-text mb-3">{{ 'SET.SELECT_ITEMS_HELP' | translate }}</p>
 
@@ -80,7 +80,7 @@
     </div>
 
     <!-- Sets List -->
-    <ng-container *ngIf="availableMenus$ | async as menus">
+    <ng-container *ngIf="menus">
         <div class="sets-grid" *ngIf="(menuSets$ | async) as menuSets">
             <div class="set-card" *ngFor="let set of menuSets">
                 <div class="set-header">

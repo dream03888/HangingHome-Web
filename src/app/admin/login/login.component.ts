@@ -21,7 +21,15 @@ export class LoginComponent {
     private fb: FormBuilder
   ) {
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/admin/stores']);
+      const user = this.authService.currentUserValue;
+      if (user?.role !== 'superadmin' &&
+        user?.permissions?.includes('access_kiosk') &&
+        !user?.permissions?.includes('manage_store') &&
+        !user?.permissions?.includes('manage_menus')) {
+        this.router.navigate(['/kiosk']);
+      } else {
+        this.router.navigate(['/admin/stores']);
+      }
     }
 
     this.loginForm = this.fb.group({
@@ -30,14 +38,25 @@ export class LoginComponent {
     });
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.loginForm.invalid) {
       return;
     }
 
     const { username, password } = this.loginForm.value;
-    if (this.authService.login(username, password)) {
-      this.router.navigate(['/admin/stores']);
+    const success = await this.authService.login(username, password);
+    if (success) {
+      const user = this.authService.currentUserValue;
+
+      // If the user's ONLY permission is access_kiosk and they are not a superadmin
+      if (user?.role !== 'superadmin' &&
+        user?.permissions?.includes('access_kiosk') &&
+        !user?.permissions?.includes('manage_store') &&
+        !user?.permissions?.includes('manage_menus')) {
+        this.router.navigate(['/kiosk']);
+      } else {
+        this.router.navigate(['/admin/stores']);
+      }
     } else {
       this.errorMessage = 'Invalid username or password';
     }

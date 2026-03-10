@@ -46,4 +46,19 @@ export class StoreListComponent implements OnInit {
       console.error('Error fetching stores:', error);
     }
   }
+
+  async deleteStore(storeId: string, storeName: string) {
+    if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบสาขา "${storeName}"?\nการกระทำนี้ไม่สามารถย้อนกลับได้`)) {
+      try {
+        const res = await this.apis.deleteStore(storeId);
+        if (res.status === 200) {
+          this.stores = this.stores.filter(s => s.id !== storeId);
+        } else {
+          alert('ไม่สามารถลบสาขาได้ อาจมีข้อมูลเมนู พนักงาน หรือคลังสินค้าผูกอยู่\nError: ' + res.msg);
+        }
+      } catch (e) {
+        console.error('Delete failed', e);
+      }
+    }
+  }
 }

@@ -24,6 +24,62 @@ export class MenuListComponent implements OnInit {
   store: Store | undefined;
   menus: Menu[] = [];
   isLoadingMenus = true;
+  searchTerm: string = '';
+
+  // Pagination
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+
+  get allFilteredMenus(): Menu[] {
+    if (!this.searchTerm.trim()) {
+      return this.menus;
+    }
+    const term = this.searchTerm.toLowerCase().trim();
+    return this.menus.filter(menu =>
+      menu.name.toLowerCase().includes(term) ||
+      (menu.name_eng && menu.name_eng.toLowerCase().includes(term))
+    );
+  }
+
+  get paginatedMenus(): Menu[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.allFilteredMenus.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.allFilteredMenus.length / this.itemsPerPage);
+  }
+
+  get pages(): number[] {
+    const pages = [];
+    for (let i = 1; i <= this.totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  onSearch(event: any) {
+    this.searchTerm = event.target.value;
+    this.currentPage = 1; // Reset to first page
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -77,7 +133,7 @@ export class MenuListComponent implements OnInit {
     try {
       const updatedMenu = { ...menu, product_active: !menu.product_active };
       // Call your API to update the menu. Wait for success before updating UI
-      const res = await this.apisService.createProduct(updatedMenu); // Assuming createProduct acts as upsert/update
+      const res = await this.apisService.updateProduct(updatedMenu);
 
       if (res.status === 200) {
         // Update local state if successful

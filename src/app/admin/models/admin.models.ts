@@ -1,7 +1,9 @@
 export interface Store {
     id: string;
     name: string;
+    name_eng?: string;
     description?: string;
+    is_stock_enabled?: boolean; // Phase 3 Inventory Support
     createdAt: Date;
 }
 
@@ -19,6 +21,8 @@ export interface MenuOption {
     group_name_eng?: string;
     isRequired?: boolean; // kept for compatibility
     isMultiple?: boolean; // kept for compatibility
+    minChoices?: number;
+    maxChoices?: number;
     choices: MenuOptionChoice[];
 }
 
@@ -48,4 +52,38 @@ export interface MenuSet {
     storeId: string;
     name: string;
     menuIds: string[];
+}
+
+// --- Inventory Models ---
+export interface Ingredient {
+    id: number;
+    store_id: string;
+    name: string;
+    unit: string;
+    current_quantity: number;
+    min_alert_level: number;
+    created_at?: Date;
+}
+
+export interface StockTransaction {
+    id: number;
+    ingredient_id: number;
+    type: 'in' | 'out' | 'adjust';
+    quantity_changed: number;
+    reason: string;
+    created_at?: Date;
+    created_by: string;
+    // Joined fields from SQL
+    ingredient_name?: string;
+    unit?: string;
+}
+
+export interface RecipeItem {
+    id?: number;
+    product_id: string;
+    ingredient_id: number;
+    quantity_required: number;
+    // Joined fields from SQL
+    ingredient_name?: string;
+    unit?: string;
 }

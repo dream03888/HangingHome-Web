@@ -1,36 +1,59 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { User } from '../models/auth.model';
+import { ApisService } from './apis.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    // Mock Users
-    private initialUsers: User[] = [
-        { id: '1', username: 'superadmin', password: 'password', role: 'superadmin' },
-        { id: '2', username: 'storeadmin1', password: 'password', role: 'storeadmin', storeId: '1', permissions: ['edit_store', 'edit_menus', 'toggle_menu'] },
-        { id: '3', username: 'storeadmin2', password: 'password', role: 'storeadmin', storeId: '2', permissions: ['toggle_menu'] }, // Can only toggle menus, not edit prices
-    ];
-
-    private usersSubject = new BehaviorSubject<User[]>(this.initialUsers);
-    public users$: Observable<User[]> = this.usersSubject.asObservable();
-
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
 
-    constructor() {
-        // Retrieve users list if we added new ones
-        const savedUsersList = localStorage.getItem('mock_users_list');
-        if (savedUsersList) {
-            this.usersSubject.next(JSON.parse(savedUsersList));
-        }
+    // We will use this promise to delay the guard until the initial auth check is done
+    private initializationPromise: Promise<boolean>;
 
-        // Check if there is a saved user session in LocalStorage
-        const savedUser = localStorage.getItem('mock_user_session');
-        if (savedUser) {
-            this.currentUserSubject.next(JSON.parse(savedUser));
+    constructor(private apisService: ApisService) {
+        this.initializationPromise = this.loadTokenAsync();
+    }
+
+    public get isReady(): Promise<boolean> {
+        return this.initializationPromise;
+    }
+
+    private async loadTokenAsync(): Promise<boolean> {
+        const token = localStorage.getItem('kiosk_auth_token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.exp && payload.exp * 1000 < Date.now()) {
+                    this.logoutLocally();
+                    return false;
+                }
+
+                // Verify with server checking if the token was revoked (logged in elsewhere)
+                const res = await this.apisService.verifySession({ id: payload.id, token });
+                if (res.status === 200 && (res as any).isValid) {
+                    this.currentUserSubject.next({
+                        id: payload.id.toString(),
+                        username: payload.username,
+                        role: payload.role,
+                        storeId: payload.storeId?.toString() || undefined,
+                        permissions: payload.permissions || []
+                    });
+                    return true;
+                } else {
+                    console.warn("Session revoked by Server (Multiple Logins)");
+                    this.logoutLocally();
+                    return false;
+                }
+            } catch (e) {
+                console.error("Invalid token format in local storage", e);
+                this.logoutLocally();
+                return false;
+            }
         }
+        return false;
     }
 
     public get currentUserValue(): User | null {
@@ -39,22 +62,37 @@ export class AuthService {
 
     // --- Authentication --- //
 
-    login(username: string, password?: string): boolean {
-        const users = this.usersSubject.value;
-        const user = users.find(u => u.username === username && u.password === password);
-        if (user) {
-            const userToSave = { ...user };
-            delete userToSave.password; // Don't save pass in local storage session
-
-            localStorage.setItem('mock_user_session', JSON.stringify(userToSave));
-            this.currentUserSubject.next(userToSave);
-            return true;
+    async login(username: string, password?: string): Promise<boolean> {
+        try {
+            const res = await this.apisService.login({ username, password });
+            if (res.status === 200 && res.token) {
+                localStorage.setItem('kiosk_auth_token', res.token);
+                this.currentUserSubject.next({
+                    id: res.user.id.toString(),
+                    username: res.user.username,
+                    role: res.user.role,
+                    storeId: res.user.storeId?.toString() || undefined,
+                    permissions: res.user.permissions || []
+                });
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error("Login Error: ", error);
+            return false;
         }
-        return false;
     }
 
-    logout(): void {
-        localStorage.removeItem('mock_user_session');
+    async logout(): Promise<void> {
+        const user = this.currentUserSubject.value;
+        if (user) {
+            await this.apisService.logoutSession(user.id);
+        }
+        this.logoutLocally();
+    }
+
+    private logoutLocally(): void {
+        localStorage.removeItem('kiosk_auth_token');
         this.currentUserSubject.next(null);
     }
 
@@ -71,7 +109,7 @@ export class AuthService {
     canAccessStore(storeId: string): boolean {
         if (!this.isAuthenticated()) return false;
         if (this.isSuperAdmin()) return true;
-        return this.currentUserValue?.storeId === storeId;
+        return this.currentUserValue?.storeId?.toString() === storeId.toString();
     }
 
     hasPermission(permission: string): boolean {
@@ -80,52 +118,5 @@ export class AuthService {
 
         const user = this.currentUserValue;
         return !!(user?.permissions && user.permissions.includes(permission));
-    }
-
-    // --- User Management (Settings) --- //
-
-    getUsers(): Observable<User[]> {
-        return this.users$;
-    }
-
-    getUserById(id: string): User | undefined {
-        return this.usersSubject.value.find(u => u.id === id);
-    }
-
-    addUser(user: User): void {
-        const users = this.usersSubject.value;
-        user.id = (users.length + 1).toString() + Math.random().toString(36).substring(7);
-        const newUsers = [...users, user];
-        this.usersSubject.next(newUsers);
-        localStorage.setItem('mock_users_list', JSON.stringify(newUsers));
-    }
-
-    updateUser(id: string, updatedData: Partial<User>): void {
-        const users = this.usersSubject.value;
-        const index = users.findIndex(u => u.id === id);
-        if (index > -1) {
-            // Keep existing password if not updated
-            const existingUser = users[index];
-            if (!updatedData.password) {
-                updatedData.password = existingUser.password;
-            }
-            users[index] = { ...existingUser, ...updatedData };
-            this.usersSubject.next([...users]);
-            localStorage.setItem('mock_users_list', JSON.stringify(users));
-
-            // Also update current session if editing self
-            if (this.currentUserValue?.id === id) {
-                const refreshedSelf = { ...users[index] };
-                delete refreshedSelf.password;
-                localStorage.setItem('mock_user_session', JSON.stringify(refreshedSelf));
-                this.currentUserSubject.next(refreshedSelf);
-            }
-        }
-    }
-
-    deleteUser(id: string): void {
-        const users = this.usersSubject.value.filter(u => u.id !== id);
-        this.usersSubject.next(users);
-        localStorage.setItem('mock_users_list', JSON.stringify(users));
     }
 }

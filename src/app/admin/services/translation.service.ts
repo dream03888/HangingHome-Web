@@ -42,6 +42,7 @@ const TH_DICT: Record<string, string> = {
     'MENU.DISCOUNT': 'ส่วนลด',
     'MENU.EMPTY': 'ไม่พบเมนูในร้านนี้',
     'MENU.ADD_FIRST': 'เพิ่มเมนูแรก',
+    'MENU.SEARCH_PLACEHOLDER': 'ค้นหาเมนูอาหาร...',
 
     // Menu Form
     'MENU.CREATE_TITLE': 'เพิ่มเมนูใหม่',
@@ -67,7 +68,9 @@ const TH_DICT: Record<string, string> = {
     'OPTION.NAME': 'ชื่อตัวเลือก (เช่น ระดับความหวาน)',
     'OPTION.REQUIRED': 'บังคับเลือก',
     'OPTION.MULTIPLE': 'เลือกได้หลายข้อ',
-    'OPTION.CHOICES': 'รายการย่อย',
+    'OPTION.MIN_CHOICES': 'ขั้นต่ำ',
+    'OPTION.MAX_CHOICES': 'สูงสุด',
+    'OPTION.CHOICES': 'ตัวเลือกต่างๆ',
     'OPTION.ADD_CHOICE': '+ เพิ่มรายการย่อย',
     'OPTION.CHOICE_NAME': 'ชื่อรายการย่อย (เช่น 100%)',
 
@@ -103,6 +106,8 @@ const TH_DICT: Record<string, string> = {
     'USER.PERM_MANAGE_STORE': 'จัดการข้อมูลร้าน',
     'USER.PERM_MANAGE_MENU': 'เพิ่ม/แก้ไขเมนูและเซ็ต',
     'USER.PERM_TOGGLE_MENU': 'เปิด/ปิดสถานะเมนูเท่านั้น',
+    'USER.PERM_MANAGE_STOCK': 'จัดการคลังวัตถุดิบ (Stock)',
+    'USER.PERM_ACCESS_KIOSK': 'เข้าใช้งานหน้าร้าน (Cashier/Kiosk)'
 };
 
 const EN_DICT: Record<string, string> = {
@@ -145,6 +150,7 @@ const EN_DICT: Record<string, string> = {
     'MENU.DISCOUNT': 'Discount',
     'MENU.EMPTY': 'No menu items found for this store.',
     'MENU.ADD_FIRST': 'Add First Item',
+    'MENU.SEARCH_PLACEHOLDER': 'Search menus by name...',
 
     // Menu Form
     'MENU.CREATE_TITLE': 'Add Menu Item',
@@ -169,7 +175,9 @@ const EN_DICT: Record<string, string> = {
     'OPTION.ADD': '+ Add Option',
     'OPTION.NAME': 'Option Name (e.g. Sweetness)',
     'OPTION.REQUIRED': 'Required Option',
-    'OPTION.MULTIPLE': 'Allow Multiple Choices',
+    'OPTION.MULTIPLE': 'Multiple Selection',
+    'OPTION.MIN_CHOICES': 'Min',
+    'OPTION.MAX_CHOICES': 'Max',
     'OPTION.CHOICES': 'Choices',
     'OPTION.ADD_CHOICE': '+ Add Another Choice',
     'OPTION.CHOICE_NAME': 'Choice Name (e.g. 100%)',
@@ -205,7 +213,9 @@ const EN_DICT: Record<string, string> = {
     'USER.PERM_TITLE': 'Granular Permissions',
     'USER.PERM_MANAGE_STORE': 'Manage Store Details',
     'USER.PERM_MANAGE_MENU': 'Create/Edit Menus',
-    'USER.PERM_TOGGLE_MENU': 'Toggle Menu Status (On/Off)'
+    'USER.PERM_TOGGLE_MENU': 'Toggle Menu Status (On/Off)',
+    'USER.PERM_MANAGE_STOCK': 'Manage Inventory & Stock',
+    'USER.PERM_ACCESS_KIOSK': 'Access Kiosk / Point of Sale (Cashier)'
 };
 
 @Injectable({

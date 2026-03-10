@@ -40,6 +40,15 @@ export class AdminDataService {
     this.stores$.next(this.stores);
   }
 
+  updateStore(id: string, partialStore: Partial<Store>) {
+    const idx = this.stores.findIndex(s => s.id === id);
+    if (idx > -1) {
+      this.stores[idx] = { ...this.stores[idx], ...partialStore };
+      this.stores = [...this.stores];
+      this.stores$.next(this.stores);
+    }
+  }
+
 
 
   getMenuSetsForStore(storeId: string): Observable<MenuSet[]> {

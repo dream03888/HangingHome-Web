@@ -114,7 +114,9 @@ export class MenuFormComponent implements OnInit {
                 name: opt.group_name,
                 nameEn: opt.group_name_eng || '',
                 isRequired: opt.isRequired || false,
-                isMultiple: opt.isMultiple || false
+                isMultiple: opt.isMultiple || false,
+                minChoices: opt.minChoices || 0,
+                maxChoices: opt.maxChoices || 0
               });
               // Add choices
               if (opt.choices) {
@@ -146,6 +148,8 @@ export class MenuFormComponent implements OnInit {
       nameEn: [''],
       isRequired: [false],
       isMultiple: [false],
+      minChoices: [0, Validators.min(0)],
+      maxChoices: [0, Validators.min(0)],
       choices: this.fb.array([])
     });
   }
@@ -230,6 +234,8 @@ export class MenuFormComponent implements OnInit {
       group_name_eng: opt.nameEn,
       isRequired: opt.isRequired,
       isMultiple: opt.isMultiple,
+      minChoices: opt.minChoices,
+      maxChoices: opt.maxChoices,
       choices: opt.choices.map((c: any) => ({
         options_name: c.name,
         options_name_eng: c.nameEn,

@@ -31,8 +31,8 @@ export class AdminLayoutComponent implements OnInit {
     this.translationService.setLanguage(nextLang);
   }
 
-  logout() {
-    this.authService.logout();
+  async logout() {
+    await this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

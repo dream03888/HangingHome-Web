@@ -152,6 +152,20 @@
                                     <span class="checkmark"></span>
                                     {{ 'OPTION.MULTIPLE' | translate }}
                                 </label>
+
+                                <div class="choices-limits" *ngIf="opt.get('isMultiple')?.value"
+                                    style="display: inline-flex; align-items: center; gap: 8px; margin-left: 16px; border-left: 1px solid var(--border-color); padding-left: 16px;">
+                                    <label style="margin-bottom: 0; font-size: 0.85rem; color: var(--text-muted);">{{
+                                        'OPTION.MIN_CHOICES' | translate }}:</label>
+                                    <input type="number" formControlName="minChoices" class="form-control"
+                                        style="width: 70px; padding: 4px 8px; height: 32px; font-size: 0.9rem;" min="0">
+
+                                    <label
+                                        style="margin-bottom: 0; font-size: 0.85rem; color: var(--text-muted); margin-left: 8px;">{{
+                                        'OPTION.MAX_CHOICES' | translate }}:</label>
+                                    <input type="number" formControlName="maxChoices" class="form-control"
+                                        style="width: 70px; padding: 4px 8px; height: 32px; font-size: 0.9rem;" min="0">
+                                </div>
                             </div>
 
                             <div class="choices-container" formArrayName="choices">
