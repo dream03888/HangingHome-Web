@@ -272,11 +272,58 @@
         </div>
 
         <div style="padding: 1.5rem; border-top: 1px solid var(--border-soft); background: var(--surface);">
-            <div
-                style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 1.1rem; font-weight: bold;">
-                <span>Total</span>
-                <span style="color: var(--primary);">฿{{ cartService.cartTotal }}</span>
+
+            <!-- Promo Code Section -->
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--text-sub); margin-bottom: 0.5rem;">Promo
+                    Code</label>
+
+                <div *ngIf="!cartService.appliedPromo" style="display: flex; gap: 0.5rem;">
+                    <input type="text" [(ngModel)]="promoCode" placeholder="Enter code"
+                        style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-soft); border-radius: 8px; font-size: 1rem; text-transform: uppercase;">
+                    <button (click)="applyPromoCode()" [disabled]="isApplyingPromo || !promoCode"
+                        style="background: var(--surface-hover); border: 1px solid var(--border-soft); padding: 0 1rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        {{ isApplyingPromo ? '...' : 'Apply' }}
+                    </button>
+                </div>
+
+                <div *ngIf="promoError" style="color: #EF4444; font-size: 0.8rem; margin-top: 0.5rem;">
+                    {{ promoError }}
+                </div>
+
+                <div *ngIf="cartService.appliedPromo"
+                    style="display: flex; justify-content: space-between; align-items: center; background: rgba(16, 185, 129, 0.1); border: 1px dashed #10B981; padding: 0.75rem 1rem; border-radius: 8px;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: bold; color: #10B981; text-transform: uppercase;">{{
+                            cartService.appliedPromo.code }}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-sub);">
+                            {{ cartService.appliedPromo.type === 'percentage' ? cartService.appliedPromo.value + '% off'
+                            : '฿' + cartService.appliedPromo.value + ' off' }}
+                        </span>
+                    </div>
+                    <button (click)="removePromo()"
+                        style="background: none; border: none; color: #EF4444; font-size: 0.875rem; cursor: pointer; font-weight: 500;">Remove</button>
+                </div>
             </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: var(--text-sub);">
+                    <span>Subtotal</span>
+                    <span>฿{{ cartService.subTotal }}</span>
+                </div>
+                <div *ngIf="cartService.discountAmount > 0"
+                    style="display: flex; justify-content: space-between; font-size: 0.95rem; color: #10B981; font-weight: 500;">
+                    <span>Discount</span>
+                    <span>-฿{{ cartService.discountAmount }}</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; color: var(--text-main); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-soft);">
+                    <span>Total</span>
+                    <span style="color: var(--primary);">฿{{ cartService.cartTotal }}</span>
+                </div>
+            </div>
+
             <button (click)="checkout()" [disabled]="cartService.items.length === 0 || isLoading"
                 [style.opacity]="cartService.items.length === 0 ? 0.5 : 1"
                 style="width: 100%; background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 16px; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: transform 0.1s;">

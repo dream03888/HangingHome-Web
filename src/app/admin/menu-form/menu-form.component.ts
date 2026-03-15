@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AdminDataService } from '../services/admin-data.service';
 import { AuthService } from '../services/auth.service';
 import { ApisService } from '../services/apis.service';
-import { Menu, MenuOption, MenuOptionChoice, Store } from '../models/admin.models';
+import { Menu, MenuOption, MenuOptionChoice, Store, Promotion } from '../models/admin.models';
 import { TranslatePipe } from '../pipes/translate.pipe';
 
 @Component({
@@ -32,6 +32,19 @@ export class MenuFormComponent implements OnInit {
   imagePreview: string | null = null;
   selectedFile: File | null = null;
 
+  // Master Addon Groups State
+  showMasterGroupModal = false;
+  isLoadingMasterGroups = false;
+  masterGroups: any[] = [];
+  selectedMasterGroupIds: Set<string> = new Set();
+  promotions: Promotion[] = [];
+
+  // Master Catalog 'Publish To Stores' State
+  isMasterCatalog = false;
+  targetStores: Store[] = [];
+  selectedPublishStoreIds: Set<string> = new Set();
+  isMasterLinked = false;
+
   ngOnInit() {
     this.menuForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -42,21 +55,25 @@ export class MenuFormComponent implements OnInit {
       hasDiscount: [false],
       discountType: ['percentage'],
       discountValue: [0],
+      promotionId: [''],
       options: this.fb.array([])
     });
 
     this.route.paramMap.subscribe(async params => {
       this.storeId = params.get('storeId')!;
       this.menuId = params.get('menuId');
+      this.isMasterCatalog = this.storeId === '00000000-0000-0000-0000-000000000000';
 
       await this.loadStore(this.storeId);
+      await this.loadPromotions();
 
       if (this.menuId) {
         this.isEditMode = true;
-
         // Wait for products to load and find the specific menu item
         await this.loadProductsAndPatch(this.storeId, this.menuId);
       }
+
+      this.enforceCentralization();
     });
 
     // Listen to image URL changes
@@ -82,6 +99,11 @@ export class MenuFormComponent implements OnInit {
       if (res.status === 200) {
         const stores: Store[] = res.msg || [];
         this.store = stores.find(s => s.id === id);
+
+        if (this.isMasterCatalog) {
+          // Exclude the master store from the publish targets
+          this.targetStores = stores.filter(s => s.id !== '00000000-0000-0000-0000-000000000000');
+        }
       }
     } catch (error) {
       console.error('Failed to load store for menu form', error);
@@ -103,11 +125,13 @@ export class MenuFormComponent implements OnInit {
             imageUrl: menu.image_url || '',
             hasDiscount: !!menu.discount_type && (menu.discount_value ?? 0) > 0,
             discountType: menu.discount_type || 'percentage',
-            discountValue: menu.discount_value || 0
+            discountValue: menu.discount_value || 0,
+            promotionId: menu.promotion_id || ''
           });
           this.imagePreview = menu.image_url || null;
+          this.isMasterLinked = !!menu.master_product_id;
 
-          if (menu.items) {
+          if (menu.items && menu.items.length > 0) {
             menu.items.forEach((opt: any) => {
               const optionGroup = this.createOptionGroup();
               optionGroup.patchValue({
@@ -128,6 +152,11 @@ export class MenuFormComponent implements OnInit {
               }
               this.options.push(optionGroup);
             });
+
+            if (this.isMasterLinked) {
+              // Allow users to still edit the prices locally, but lock everything else
+              this.lockMasterOptionsExceptPrice();
+            }
           }
         }
       }
@@ -210,7 +239,7 @@ export class MenuFormComponent implements OnInit {
   }
 
   private async prepareMenuPayload(): Promise<Menu | null> {
-    const formValue = this.menuForm.value;
+    const formValue = this.menuForm.getRawValue(); // Crucial: get disabled fields too
 
     if (this.selectedFile) {
       try {
@@ -254,8 +283,24 @@ export class MenuFormComponent implements OnInit {
       image_url: formValue.imageUrl,
       discount_type: discount_type,
       discount_value: discount_value,
+      promotion_id: formValue.promotionId || null,
       items: dbItems
     };
+  }
+
+  async loadPromotions() {
+    try {
+      const res = await this.apisService.getPromotions('');
+      if (res.status === 200) {
+        let promoList: Promotion[] = res.msg || [];
+        if (this.isMasterCatalog) {
+          promoList = promoList.filter(p => p.target_type === 'product');
+        }
+        this.promotions = promoList;
+      }
+    } catch (e) {
+      console.error('Error fetching global promotions', e);
+    }
   }
 
   async createMenu() {
@@ -264,6 +309,12 @@ export class MenuFormComponent implements OnInit {
 
     const res = await this.apisService.createProduct(menu);
     console.log('Create Response:', res);
+
+    // Check if we need to publish to other stores
+    if (res.status === 200 && this.isMasterCatalog && this.selectedPublishStoreIds.size > 0 && res.data?.id) {
+      await this.publishToSelectedStores(res.data.id);
+    }
+
     if (res.status == 200) {
       this.router.navigate(['/admin/stores', this.storeId, 'menus']);
     }
@@ -276,12 +327,147 @@ export class MenuFormComponent implements OnInit {
     // Use updateProduct for edit mode
     const res = await this.apisService.updateProduct(menu);
     console.log('Update Response:', res);
+
+    if (res.status === 200 && this.isMasterCatalog && this.selectedPublishStoreIds.size > 0 && res.data?.id) {
+      await this.publishToSelectedStores(res.data.id);
+    }
+
     if (res.status == 200) {
       this.router.navigate(['/admin/stores', this.storeId, 'menus']);
     }
   }
 
+  async publishToSelectedStores(productId: string) {
+    if (this.selectedPublishStoreIds.size === 0) return;
+
+    // We clone sequentially to avoid overwhelming the server
+    for (const targetId of this.selectedPublishStoreIds) {
+      try {
+        await this.apisService.cloneProductFromMaster({
+          master_product_ids: [productId],
+          target_store_id: targetId
+        });
+        console.log(`Successfully published product ${productId} to store ${targetId}`);
+      } catch (err) {
+        console.error(`Failed to publish to store ${targetId}`, err);
+      }
+    }
+  }
+
   goBack() {
     this.location.back();
+  }
+
+  // --- Master Addon Groups Feature ---
+  async openMasterGroupModal() {
+    this.showMasterGroupModal = true;
+    this.isLoadingMasterGroups = true;
+    this.selectedMasterGroupIds.clear();
+    this.masterGroups = [];
+
+    try {
+      const res = await this.apisService.getGlobalMasterOptions();
+      if (res.status === 200 && res.msg) {
+        this.masterGroups = res.msg;
+      }
+    } catch (error) {
+      console.error('Failed to load global master options', error);
+    } finally {
+      this.isLoadingMasterGroups = false;
+    }
+  }
+
+  closeMasterGroupModal() {
+    this.showMasterGroupModal = false;
+    this.selectedMasterGroupIds.clear();
+  }
+
+  togglePublishStoreSelection(storeId: string) {
+    if (this.selectedPublishStoreIds.has(storeId)) {
+      this.selectedPublishStoreIds.delete(storeId);
+    } else {
+      this.selectedPublishStoreIds.add(storeId);
+    }
+  }
+
+  toggleMasterGroupSelection(groupId: string | number) {
+    const idStr = String(groupId);
+    if (this.selectedMasterGroupIds.has(idStr)) {
+      this.selectedMasterGroupIds.delete(idStr);
+    } else {
+      this.selectedMasterGroupIds.add(idStr);
+    }
+  }
+
+  importSelectedMasterGroups() {
+    if (this.selectedMasterGroupIds.size === 0) return;
+
+    this.masterGroups.forEach(group => {
+      if (this.selectedMasterGroupIds.has(group.group_id)) {
+        const optionGroup = this.createOptionGroup();
+        optionGroup.patchValue({
+          name: group.group_name,
+          nameEn: group.group_name_eng || '',
+          isRequired: group.isRequired || false,
+          isMultiple: group.isMultiple || false,
+          minChoices: group.minChoices || 0,
+          maxChoices: group.maxChoices || 0
+        });
+
+        // Add choices
+        if (group.choices && Array.isArray(group.choices)) {
+          group.choices.forEach((choice: any) => {
+            const choiceGroup = this.createChoiceGroup();
+            choiceGroup.patchValue({
+              name: choice.options_name,
+              nameEn: choice.options_name_eng || '',
+              price: choice.options_price
+            });
+            (optionGroup.get('choices') as FormArray).push(choiceGroup);
+          });
+        }
+
+        this.options.push(optionGroup);
+      }
+    });
+
+    this.closeMasterGroupModal();
+  }
+
+  enforceCentralization() {
+    // Only lock down if it's explicitly linked to a master product.
+    // Previously this incorrectly locked all local products.
+    if (!this.isMasterCatalog && this.isEditMode && this.isMasterLinked) {
+      const lockedFields = [
+        'name', 'nameEn', 'imageUrl', 'promotionId',
+        'options', 'hasDiscount', 'discountType', 'discountValue'
+      ];
+
+      lockedFields.forEach(field => {
+        this.menuForm.get(field)?.disable();
+      });
+
+      // Instead of completely disabling the options FormArray, we only disable metadata fields,
+      // so local stores can still adjust their own Option Prices.
+      this.lockMasterOptionsExceptPrice();
+    }
+  }
+
+  lockMasterOptionsExceptPrice() {
+    this.options.controls.forEach(optGroup => {
+      optGroup.get('name')?.disable();
+      optGroup.get('nameEn')?.disable();
+      optGroup.get('isRequired')?.disable();
+      optGroup.get('isMultiple')?.disable();
+      optGroup.get('minChoices')?.disable();
+      optGroup.get('maxChoices')?.disable();
+
+      const choices = optGroup.get('choices') as FormArray;
+      choices.controls.forEach(choiceGroup => {
+        choiceGroup.get('name')?.disable();
+        choiceGroup.get('nameEn')?.disable();
+        // notice we DO NOT disable 'price'!
+      });
+    });
   }
 }

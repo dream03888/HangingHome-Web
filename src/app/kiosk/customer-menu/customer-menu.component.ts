@@ -1,14 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ApisService } from '../../admin/services/apis.service';
-import { Store, Menu, MenuSet, MenuOption, MenuOptionChoice } from '../../admin/models/admin.models';
+import { Store, Menu, MenuSet, MenuOption, MenuOptionChoice, Promotion } from '../../admin/models/admin.models';
 import { CartCheckoutService, CartItem } from '../services/cart-checkout.service';
 
 @Component({
   selector: 'app-customer-menu',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './customer-menu.component.html',
   styleUrl: './customer-menu.component.scss'
 })
@@ -30,6 +31,10 @@ export class CustomerMenuComponent implements OnInit {
   isLoading = true;
   isCartOpen = false;
   isCheckoutSuccess = false;
+
+  promoCode: string = '';
+  promoError: string = '';
+  isApplyingPromo = false;
 
   async ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -186,13 +191,43 @@ export class CustomerMenuComponent implements OnInit {
     this.isCartOpen = !this.isCartOpen;
   }
 
+  async applyPromoCode() {
+    if (!this.promoCode || this.promoCode.trim() === '') return;
+    this.isApplyingPromo = true;
+    this.promoError = '';
+
+    try {
+      const res = await this.apisService.validatePromotion(this.promoCode.trim().toUpperCase());
+
+      if (res.status === 200 && res.msg) {
+        this.cartService.applyPromo(res.msg);
+        this.promoCode = '';
+      } else {
+        this.promoError = 'Invalid or inactive promo code.';
+      }
+    } catch (e) {
+      this.promoError = 'Failed to apply promo code.';
+    } finally {
+      this.isApplyingPromo = false;
+    }
+  }
+
+  removePromo() {
+    this.cartService.clearPromo();
+  }
+
   async checkout() {
     if (this.cartService.items.length === 0) return;
+
+    const appliedPromo = this.cartService.appliedPromo;
 
     // Prepare payload
     const payload = {
       store_id: this.storeId,
+      subtotal: this.cartService.subTotal,
+      discount_amount: this.cartService.discountAmount,
       total_amount: this.cartService.cartTotal,
+      promotion_id: appliedPromo ? appliedPromo.id : null,
       items: this.cartService.items.map(item => ({
         product_id: item.product.product_id,
         quantity: item.quantity,

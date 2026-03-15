@@ -1,0 +1,186 @@
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h2 class="page-title">{{ 'MASTER_OPTIONS.TITLE' | translate }}</h2>
+            <p class="page-subtitle">{{ 'MASTER_OPTIONS.SUBTITLE' | translate }}</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-primary" (click)="openAddModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                {{ 'MASTER_OPTIONS.ADD_BTN' | translate }}
+            </button>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div *ngIf="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading global options...</p>
+        </div>
+
+        <div *ngIf="!isLoading && masterOptions.length === 0" class="empty-state">
+            <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                    </path>
+                </svg>
+            </div>
+            <h3>{{ 'MASTER_OPTIONS.NO_OPTIONS' | translate }}</h3>
+            <p>{{ 'MASTER_OPTIONS.EMPTY_DESC' | translate }}</p>
+            <button class="btn-primary" (click)="openAddModal()">{{ 'MASTER_OPTIONS.GET_STARTED' | translate }}</button>
+        </div>
+
+        <div class="options-grid" *ngIf="!isLoading && masterOptions.length > 0">
+            <div class="option-card" *ngFor="let option of masterOptions">
+                <div class="option-card-header">
+                    <div class="title-section">
+                        <h4>{{ option.group_name }}</h4>
+                        <span class="eng-name" *ngIf="option.group_name_eng">{{ option.group_name_eng }}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-icon" (click)="openEditModal(option)" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button class="btn-icon delete" (click)="deleteOption(option.group_id)" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="option-card-body">
+                    <div class="badge-row">
+                        <span class="badge" [class.required]="option.isRequired">
+                            {{ (option.isRequired ? 'MASTER_OPTIONS.REQUIRED' : 'MASTER_OPTIONS.OPTIONAL') | translate
+                            }}
+                        </span>
+                        <span class="badge">
+                            {{ (option.isMultiple ? 'MASTER_OPTIONS.MULTI_SELECT' : 'MASTER_OPTIONS.SINGLE_SELECT') |
+                            translate }}
+                        </span>
+                    </div>
+                    <div class="choices-summary">
+                        <p class="summary-label">{{ option.choices?.length || 0 }} {{ 'MASTER_OPTIONS.OPTIONS_COUNT' |
+                            translate }}:</p>
+                        <div class="choice-pills">
+                            <span class="pill" *ngFor="let choice of $any(option.choices) | slice:0:5">
+                                {{ $any(choice).options_name }} (+฿{{ $any(choice).options_price }})
+                            </span>
+                            <span class="pill more" *ngIf="$any(option.choices)?.length > 5">+{{
+                                $any(option.choices).length - 5 }}
+                                more</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-backdrop" *ngIf="showModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>{{ (isEditMode ? 'MASTER_OPTIONS.EDIT_MODAL' : 'MASTER_OPTIONS.CREATE_MODAL') | translate }}</h3>
+            <button class="btn-close" (click)="closeModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <form [formGroup]="optionForm" (ngSubmit)="saveOption()">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>{{ 'MASTER_OPTIONS.GROUP_NAME_TH' | translate }}*</label>
+                        <input type="text" formControlName="group_name" placeholder="e.g. ความหวาน"
+                            class="form-control">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>{{ 'MASTER_OPTIONS.GROUP_NAME_EN' | translate }}</label>
+                        <input type="text" formControlName="group_name_eng" placeholder="e.g. Sweetness"
+                            class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" formControlName="isRequired">
+                            <span>{{ 'MASTER_OPTIONS.REQ_CUSTOMER' | translate }}</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" formControlName="isMultiple">
+                            <span>{{ 'MASTER_OPTIONS.ALLOW_MULTI' | translate }}</span>
+                        </label>
+                    </div>
+                    <div class="form-group" *ngIf="optionForm.get('isMultiple')?.value">
+                        <label>{{ 'MASTER_OPTIONS.MIN_CHOICES' | translate }}</label>
+                        <input type="number" formControlName="minChoices" class="form-control">
+                    </div>
+                    <div class="form-group" *ngIf="optionForm.get('isMultiple')?.value">
+                        <label>{{ 'MASTER_OPTIONS.MAX_CHOICES' | translate }}</label>
+                        <input type="number" formControlName="maxChoices" class="form-control">
+                    </div>
+                </div>
+
+                <div class="choices-section">
+                    <div class="section-header">
+                        <h5>{{ 'MASTER_OPTIONS.CHOICES_SECTION' | translate }}</h5>
+                        <button type="button" class="btn-add-choice" (click)="addChoice()">
+                            + {{ 'MASTER_OPTIONS.ADD_CHOICE' | translate }}
+                        </button>
+                    </div>
+
+                    <div formArrayName="choices" class="choices-list">
+                        <div *ngFor="let choice of choices.controls; let i = index" [formGroupName]="i"
+                            class="choice-row">
+                            <div class="idx">{{ i + 1 }}</div>
+                            <input type="text" formControlName="options_name"
+                                [placeholder]="'MASTER_OPTIONS.CHOICE_NAME_TH' | translate" class="form-control">
+                            <input type="text" formControlName="options_name_eng"
+                                [placeholder]="'MASTER_OPTIONS.CHOICE_NAME_EN' | translate" class="form-control">
+                            <div class="price-input">
+                                <span>฿</span>
+                                <input type="number" formControlName="options_price" class="form-control">
+                            </div>
+                            <button type="button" class="btn-remove" (click)="removeChoice(i)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+                <button type="submit" class="btn-primary" [disabled]="optionForm.invalid">
+                    {{ isEditMode ? 'Update' : 'Create' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

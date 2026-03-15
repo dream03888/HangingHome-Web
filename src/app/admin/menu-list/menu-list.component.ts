@@ -30,6 +30,13 @@ export class MenuListComponent implements OnInit {
   currentPage: number = 1;
   itemsPerPage: number = 10;
 
+  // Master Catalog Modal State
+  showMasterModal: boolean = false;
+  isLoadingMaster: boolean = false;
+  masterMenus: Menu[] = [];
+  selectedMasterIds: Set<string> = new Set();
+  isImporting: boolean = false;
+
   get allFilteredMenus(): Menu[] {
     if (!this.searchTerm.trim()) {
       return this.menus;
@@ -48,6 +55,10 @@ export class MenuListComponent implements OnInit {
 
   get totalPages(): number {
     return Math.ceil(this.allFilteredMenus.length / this.itemsPerPage);
+  }
+
+  get isMasterCatalog(): boolean {
+    return this.storeId === '00000000-0000-0000-0000-000000000000';
   }
 
   get pages(): number[] {
@@ -86,8 +97,22 @@ export class MenuListComponent implements OnInit {
       const id = params.get('storeId');
       if (id) {
         this.storeId = id;
-        this.loadStore(id);
+
+        // Let the pseudo store '00000...' render its menus natively
+        if (id === '00000000-0000-0000-0000-000000000000') {
+          this.store = { id: id, name: 'Master Catalog', description: 'Central Product Repository', is_stock_enabled: false } as Store;
+        } else {
+          this.loadStore(id);
+        }
+
         this.loadproduct(id);
+      }
+    });
+
+    // Listen for cross-client Socket.IO updates
+    this.apisService.socket.on('menu_updated', (data: any) => {
+      if (data.store_id === this.storeId) {
+        this.loadproduct(this.storeId);
       }
     });
   }
@@ -144,6 +169,64 @@ export class MenuListComponent implements OnInit {
 
     } catch (error) {
       console.error('API Error toggling menu status:', error);
+    }
+  }
+
+  // ==== Master Catalog Import Logic ====
+  async openMasterCatalogModal() {
+    this.showMasterModal = true;
+    this.isLoadingMaster = true;
+    this.selectedMasterIds.clear();
+    this.masterMenus = [];
+
+    try {
+      // Fetch from the injected pseudo-store pseudo-uuid
+      const res = await this.apisService.getProduct('00000000-0000-0000-0000-000000000000');
+      if (res.status === 200 && res.msg) {
+        this.masterMenus = res.msg.filter((m: Menu) => m.product_active); // Only show active master items
+      }
+    } catch (error) {
+      console.error('Failed to fetch master catalog', error);
+    } finally {
+      this.isLoadingMaster = false;
+    }
+  }
+
+  closeMasterModal() {
+    this.showMasterModal = false;
+    this.selectedMasterIds.clear();
+  }
+
+  toggleMasterSelection(productId: string) {
+    if (this.selectedMasterIds.has(productId)) {
+      this.selectedMasterIds.delete(productId);
+    } else {
+      this.selectedMasterIds.add(productId);
+    }
+  }
+
+  async importSelectedMasterItems() {
+    if (this.selectedMasterIds.size === 0) return;
+    this.isImporting = true;
+
+    const payload = {
+      target_store_id: this.storeId,
+      master_product_ids: Array.from(this.selectedMasterIds)
+    };
+
+    try {
+      const res = await this.apisService.cloneProductFromMaster(payload);
+      if (res.status === 200) {
+        this.closeMasterModal();
+        // The socket 'menu_updated' listener will refresh the list automatically.
+      } else {
+        alert('Failed to import items: ' + res.msg);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('System error occurred during import.');
+    } finally {
+      this.isImporting = false;
     }
   }
 }

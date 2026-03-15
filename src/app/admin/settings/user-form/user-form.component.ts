@@ -23,7 +23,7 @@ export class UserFormComponent implements OnInit {
     { value: 'manage_menus', label: 'USER.PERM_MANAGE_MENU' },
     { value: 'toggle_menu', label: 'USER.PERM_TOGGLE_MENU' },
     { value: 'manage_stock', label: 'USER.PERM_MANAGE_STOCK' },
-    { value: 'access_kiosk', label: 'USER.PERM_ACCESS_KIOSK' }
+    { value: 'cashier', label: 'USER.PERM_ACCESS_KIOSK' }
   ];
 
   apisService = inject(ApisService);

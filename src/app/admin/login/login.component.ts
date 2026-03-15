@@ -23,7 +23,7 @@ export class LoginComponent {
     if (this.authService.isAuthenticated()) {
       const user = this.authService.currentUserValue;
       if (user?.role !== 'superadmin' &&
-        user?.permissions?.includes('access_kiosk') &&
+        user?.permissions?.includes('cashier') &&
         !user?.permissions?.includes('manage_store') &&
         !user?.permissions?.includes('manage_menus')) {
         this.router.navigate(['/kiosk']);
@@ -48,9 +48,9 @@ export class LoginComponent {
     if (success) {
       const user = this.authService.currentUserValue;
 
-      // If the user's ONLY permission is access_kiosk and they are not a superadmin
+      // If the user's ONLY permission is cashier and they are not a superadmin
       if (user?.role !== 'superadmin' &&
-        user?.permissions?.includes('access_kiosk') &&
+        user?.permissions?.includes('cashier') &&
         !user?.permissions?.includes('manage_store') &&
         !user?.permissions?.includes('manage_menus')) {
         this.router.navigate(['/kiosk']);

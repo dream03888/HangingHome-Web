@@ -34,6 +34,7 @@ export interface Menu {
     price: number;
     image_url?: string; // from SQL
     product_active: boolean; // from SQL
+    promotion_id?: string | null;
 
     // new DB fields
     discount_type?: 'amount' | 'percentage';
@@ -45,6 +46,8 @@ export interface Menu {
         value: number;
     };
     items?: MenuOption[]; // mapped from DB's "items"
+    master_product_id?: string | null; // links to master catalog
+    linked_stores?: string[]; // Names of child stores using this master product
 }
 
 export interface MenuSet {
@@ -86,4 +89,20 @@ export interface RecipeItem {
     // Joined fields from SQL
     ingredient_name?: string;
     unit?: string;
+}
+
+// --- Promotions ---
+export interface Promotion {
+    id: string;
+    code: string;
+    type: 'percentage' | 'amount';
+    value: number;
+    target_type?: 'bill' | 'product';
+    product_ids?: string[];
+    is_active?: boolean;
+    start_date?: string | null;
+    end_date?: string | null;
+    usage_limit?: number | null;
+    used_count?: number;
+    created_at?: string;
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Menu } from '../../admin/models/admin.models';
+import { Menu, Promotion } from '../../admin/models/admin.models';
 
 export interface CartItem {
   product: Menu;
@@ -16,11 +16,18 @@ export class CartCheckoutService {
   private cartItemsSubject = new BehaviorSubject<CartItem[]>([]);
   public cartItems$: Observable<CartItem[]> = this.cartItemsSubject.asObservable();
 
+  private appliedPromoSubject = new BehaviorSubject<Promotion | null>(null);
+  public appliedPromo$: Observable<Promotion | null> = this.appliedPromoSubject.asObservable();
+
   constructor() {
     // Optionally recover from session storage
     const savedCart = sessionStorage.getItem('kiosk_cart');
     if (savedCart) {
       this.cartItemsSubject.next(JSON.parse(savedCart));
+    }
+    const savedPromo = sessionStorage.getItem('kiosk_promo');
+    if (savedPromo) {
+      this.appliedPromoSubject.next(JSON.parse(savedPromo));
     }
   }
 
@@ -32,8 +39,52 @@ export class CartCheckoutService {
     return this.items.reduce((total, item) => total + item.quantity, 0);
   }
 
-  get cartTotal(): number {
+  get subTotal(): number {
     return this.items.reduce((total, item) => total + (item.priceAtTime * item.quantity), 0);
+  }
+
+  get discountAmount(): number {
+    const promo = this.appliedPromoSubject.value;
+    if (!promo) return 0;
+
+    let discountBase = 0;
+
+    if (promo.target_type === 'bill') {
+      discountBase = this.subTotal;
+    } else {
+      discountBase = this.items
+        .filter(item => item.product.promotion_id === promo.id)
+        .reduce((sum, item) => sum + (item.priceAtTime * item.quantity), 0);
+    }
+
+    if (discountBase <= 0) return 0;
+
+    let calculatedDiscount = 0;
+    if (promo.type === 'percentage') {
+      calculatedDiscount = discountBase * (promo.value / 100);
+    } else if (promo.type === 'amount') {
+      calculatedDiscount = Math.min(promo.value, discountBase); // Cannot discount more than the base
+    }
+
+    return calculatedDiscount;
+  }
+
+  get cartTotal(): number {
+    return Math.max(0, this.subTotal - this.discountAmount);
+  }
+
+  get appliedPromo(): Promotion | null {
+    return this.appliedPromoSubject.value;
+  }
+
+  applyPromo(promo: Promotion) {
+    this.appliedPromoSubject.next(promo);
+    sessionStorage.setItem('kiosk_promo', JSON.stringify(promo));
+  }
+
+  clearPromo() {
+    this.appliedPromoSubject.next(null);
+    sessionStorage.removeItem('kiosk_promo');
   }
 
   addItem(product: Menu, quantity: number = 1, optionsSummary: string = '', computedPrice: number) {
@@ -80,6 +131,7 @@ export class CartCheckoutService {
   clearCart() {
     this.cartItemsSubject.next([]);
     sessionStorage.removeItem('kiosk_cart');
+    this.clearPromo();
   }
 
   private saveToSession() {

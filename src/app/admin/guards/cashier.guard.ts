@@ -22,7 +22,7 @@ export class CashierGuard implements CanActivate {
         }
 
         // Check if user has permission to access kiosk
-        if (this.authService.hasPermission('access_kiosk') || this.authService.isSuperAdmin()) {
+        if (this.authService.hasPermission('cashier') || this.authService.isSuperAdmin()) {
             return true;
         }
 

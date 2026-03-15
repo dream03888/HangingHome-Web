@@ -50,7 +50,21 @@
                 </svg>
                 Dashboard
             </button>
-            <button *ngIf="authService.hasPermission('manage_menus')" class="btn-primary" routerLink="new">
+            <button
+                *ngIf="authService.hasPermission('manage_menus') && storeId !== '00000000-0000-0000-0000-000000000000'"
+                class="btn-secondary" style="border-color: var(--primary); color: var(--primary);"
+                (click)="openMasterCatalogModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                {{ 'MENU.IMPORT_MASTER' | translate }}
+            </button>
+
+            <button *ngIf="authService.hasPermission('manage_menus') && isMasterCatalog" class="btn-primary"
+                routerLink="new">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -100,9 +114,31 @@
                                     <polyline points="21 15 16 10 5 21"></polyline>
                                 </svg>
                             </div>
-                            <span class="menu-name">{{ menu.name }}</span>
-                            <span class="menu-name text-xs text-muted block" *ngIf="menu.name_eng">{{ menu.name_eng
-                                }}</span>
+                            <div>
+                                <span class="menu-name">{{ menu.name }}</span>
+                                <span class="menu-name text-xs text-muted block" *ngIf="menu.name_eng">{{ menu.name_eng
+                                    }}</span>
+                                <span *ngIf="menu.master_product_id" class="master-sync-badge"
+                                    title="ซิงค์ข้อมูลจากเมนูกลาง (ชื่อ/รูปภาพ/Addon)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                    {{ 'MENU.SYNCED_MASTER' | translate }}
+                                </span>
+
+                                <!-- Show linked stores for Master Catalog items -->
+                                <div *ngIf="isMasterCatalog && menu.linked_stores && menu.linked_stores.length > 0"
+                                    class="linked-stores-list mt-1">
+                                    <span class="text-xs text-muted block mb-1">ร้านค้าที่เชื่อมต่อ:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span *ngFor="let sName of menu.linked_stores" class="store-tag">
+                                            {{ sName }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </td>
                     <td>{{ menu.price | currency:'THB':'symbol-narrow':'1.0-0' }}</td>
@@ -218,5 +254,80 @@
         <ng-template #loading>
             <div class="loading-state">Loading menus...</div>
         </ng-template>
+    </div>
+</div>
+
+<!-- Master Catalog Import Modal -->
+<div class="modal-backdrop" *ngIf="showMasterModal">
+    <div class="modal-container" style="max-width: 700px; width: 90%;">
+        <div class="modal-header">
+            <h3>{{ 'MENU.IMPORT_MASTER' | translate }}</h3>
+            <button class="btn-icon" (click)="closeMasterModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body"
+            style="background: var(--surface-hover); border-radius: 8px; padding: 1rem; margin-top: 1rem; max-height: 400px; overflow-y: auto;">
+            <div *ngIf="isLoadingMaster" class="text-center text-muted" style="padding: 2rem;">
+                Loading Master Catalog...
+            </div>
+
+            <div *ngIf="!isLoadingMaster && masterMenus.length === 0" class="text-center text-muted"
+                style="padding: 2rem;">
+                {{ 'MENU.MASTER_EMPTY' | translate }}
+            </div>
+
+            <div class="master-item-list" *ngIf="!isLoadingMaster && masterMenus.length > 0">
+                <label *ngFor="let item of masterMenus" class="master-item-row"
+                    style="display: flex; align-items: center; padding: 12px; background: var(--surface); border: 1px solid var(--border-soft); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;">
+                    <input type="checkbox" [checked]="selectedMasterIds.has(item.product_id)"
+                        (change)="toggleMasterSelection(item.product_id)"
+                        style="width: 20px; height: 20px; accent-color: var(--primary); margin-right: 16px;">
+                    <div class="menu-image"
+                        [style.backgroundImage]="item.image_url ? 'url(' + item.image_url + ')' : ''"
+                        style="width: 40px; height: 40px; border-radius: 6px; background-size: cover; background-position: center; border: 1px solid var(--border); margin-right: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-color: var(--surface-hover);">
+                        <svg *ngIf="!item.image_url" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 1rem; color: var(--text);">{{ item.name }}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-sub);" *ngIf="item.name_eng">{{ item.name_eng
+                            }}</div>
+                        <div style="font-size: 0.8rem; margin-top:4px;"
+                            *ngIf="item.items && $any(item.items).length > 0">
+                            <span style="color: var(--primary); font-weight:500;">{{ $any(item.items).length }} {{
+                                'MENU.ADDON_GROUPS' | translate }}</span>
+                        </div>
+                    </div>
+                    <div style="font-weight: 600; color: var(--primary); padding-left: 1rem;">
+                        {{ item.price | currency:'THB':'symbol-narrow':'1.0-0' }}
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="modal-footer"
+            style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-soft);">
+            <div class="text-muted" style="font-size: 0.9rem;">
+                <span style="font-weight: 600; color: var(--text);">{{ selectedMasterIds.size }}</span> items selected
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-secondary" (click)="closeMasterModal()">{{ 'COMMON.CANCEL' | translate }}</button>
+                <button class="btn-primary" [disabled]="selectedMasterIds.size === 0 || isImporting"
+                    (click)="importSelectedMasterItems()">
+                    {{ isImporting ? 'Importing...' : ('COMMON.SAVE' | translate) }}
+                </button>
+            </div>
+        </div>
     </div>
 </div>

@@ -188,7 +188,19 @@
     font-weight: 500;
 }
 
+/* Master-linked UI adjustments */
+.options-disabled {
 
+    input:disabled,
+    select:disabled,
+    button:disabled {
+        background-color: var(--bg-hover) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-muted) !important;
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+}
 
 .discount-header {
     display: flex;
