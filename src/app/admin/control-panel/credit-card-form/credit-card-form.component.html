@@ -1,0 +1,71 @@
+<div class="form-container">
+    <header class="page-header">
+        <div class="title-section">
+            <button class="btn-back" routerLink="/admin/control-panel/credit-cards">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <h1>{{ (isEdit ? 'CREDIT_CARDS.EDIT_TITLE' : 'CREDIT_CARDS.CREATE_TITLE') | translate }}</h1>
+        </div>
+    </header>
+
+    <div class="card form-card">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="form-grid">
+                <!-- Company Name -->
+                <div class="form-group">
+                    <label>{{ 'CREDIT_CARDS.NAME' | translate }} <span class="required">*</span></label>
+                    <input type="text" formControlName="name" placeholder="e.g. VISA, MASTERCARD">
+                </div>
+
+                <!-- Fee Percentage -->
+                <div class="form-group">
+                    <label>{{ 'CREDIT_CARDS.FEE' | translate }} <span class="required">*</span></label>
+                    <input type="number" formControlName="fee_pct" step="0.01" placeholder="0.00">
+                </div>
+
+                <!-- Contact Person -->
+                <div class="form-group">
+                    <label>{{ 'CREDIT_CARDS.CONTACT' | translate }}</label>
+                    <input type="text" formControlName="contact_name" [placeholder]="'CREDIT_CARDS.CONTACT' | translate">
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label>{{ 'CREDIT_CARDS.PHONE' | translate }}</label>
+                    <input type="tel" formControlName="phone" placeholder="e.g. 02-123-4567">
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label>{{ 'CREDIT_CARDS.EMAIL' | translate }}</label>
+                    <input type="email" formControlName="email" placeholder="example@company.com">
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                    <label>{{ 'CREDIT_CARDS.STATUS' | translate }}</label>
+                    <div class="toggle-group">
+                        <label class="switch">
+                            <input type="checkbox" formControlName="is_active">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="status-label">{{ (form.get('is_active')?.value ? 'MEMBERS.ACTIVE' : 'MEMBERS.INACTIVE') | translate }}</span>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="form-group full-width">
+                    <label>{{ 'CREDIT_CARDS.ADDRESS' | translate }}</label>
+                    <textarea formControlName="address" rows="3" [placeholder]="'CREDIT_CARDS.ADDRESS' | translate"></textarea>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <button type="button" class="btn btn-cancel" routerLink="/admin/control-panel/credit-cards">{{ 'COMMON.CANCEL' | translate }}</button>
+                <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isLoading">
+                    {{ (isLoading ? 'COMMON.SAVING' : (isEdit ? 'CREDIT_CARDS.SAVE_CHANGES' : 'CREDIT_CARDS.CREATE_COMPANY')) | translate }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

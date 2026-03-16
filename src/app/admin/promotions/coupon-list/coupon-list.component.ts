@@ -47,6 +47,11 @@ import { AuthService } from '../../services/auth.service';
               <span class="prefix-label">{{ 'COUPON.BATCH_PREFIX' | translate }}</span>
               <span class="prefix-code">{{ cam.prefix }}</span>
             </div>
+            <div class="card-actions" style="display: flex; gap: 8px;">
+              <button class="action-btn delete" (click)="deleteCampaign(cam.id)" *ngIf="isSuperAdmin" title="Delete Campaign">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
             <span class="status-pill" [class.active]="cam.is_active">
               {{ cam.is_active ? ('COUPON.ACTIVE' | translate) : ('COUPON.INACTIVE' | translate) }}
             </span>
@@ -71,16 +76,45 @@ import { AuthService } from '../../services/auth.service';
               </div>
             </div>
 
-            <div class="usage-stats">
-              <div class="stats-header">
-                <span class="stats-label">{{ 'COUPON.REDEMPTION' | translate }}</span>
-                <span class="stats-value">{{ cam.used_coupons || 0 }} / {{ cam.total_coupons || 0 }}</span>
+              <div class="usage-stats">
+                <div class="stats-header">
+                  <span class="stats-label">{{ 'COUPON.REDEMPTION' | translate }}</span>
+                  <span class="stats-value">{{ cam.used_coupons || 0 }} / {{ cam.total_coupons || 0 }}</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" [style.width.%]="(cam.used_coupons || 0) / (cam.total_coupons || 1) * 100"></div>
+                </div>
+                <p class="usage-text">{{ 'COUPON.USAGE_HINT' | translate }}</p>
               </div>
-              <div class="progress-track">
-                <div class="progress-fill" [style.width.%]="(cam.used_coupons || 0) / (cam.total_coupons || 1) * 100"></div>
+
+              <!-- View Usage Button -->
+              <a class="view-usage-btn" [routerLink]="['../coupons', cam.id, 'usage', cam.name]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                View Usage Report
+              </a>
+
+              <!-- Action Row: Toggle + Edit -->
+              <div class="card-actions-row">
+                <button class="action-btn edit-btn" [routerLink]="['../coupons', cam.id, 'edit']" title="Edit Campaign">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  Edit
+                </button>
+                <button class="action-btn" [class.toggle-on]="cam.is_active" [class.toggle-off]="!cam.is_active"
+                  (click)="toggleCampaign(cam)" [disabled]="cam.isToggling" title="Toggle Active">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  {{ cam.is_active ? 'Deactivate' : 'Activate' }}
+                </button>
               </div>
-              <p class="usage-text">{{ 'COUPON.USAGE_HINT' | translate }}</p>
-            </div>
           </div>
         </div>
       </div>
@@ -127,6 +161,55 @@ import { AuthService } from '../../services/auth.service';
     .progress-fill { height: 100%; background: var(--primary); border-radius: 99px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
     .usage-text { font-size: 0.7rem; color: var(--text-muted); font-style: italic; }
 
+    .view-usage-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-soft);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .view-usage-btn:hover { background: rgba(var(--primary-rgb), 0.1); border-color: var(--primary); }
+
+    .card-actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .action-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border-soft);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+    }
+    .action-btn:hover { border-color: var(--primary); background: rgba(var(--primary-rgb),0.1); color: var(--primary); }
+    .action-btn.delete { color: var(--text-muted); }
+    .action-btn.delete:hover { background: #ef4444; border-color: #ef4444; color: white; }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .action-btn.edit-btn { color: var(--primary); border-color: var(--primary-soft); }
+    .action-btn.toggle-on { color: #10b981; border-color: rgba(16,185,129,0.3); }
+    .action-btn.toggle-off { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+    .action-btn.toggle-on:hover { background: rgba(16,185,129,0.1); }
+    .action-btn.toggle-off:hover { background: rgba(239,68,68,0.1); }
+
     .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px 0; gap: 16px; color: var(--text-muted); }
     .spinner { width: 40px; height: 40px; border: 3px solid var(--border-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -156,6 +239,34 @@ export class CouponListComponent implements OnInit {
       console.error(e);
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  async toggleCampaign(cam: any) {
+    cam.isToggling = true;
+    try {
+      const res = await this.apisSvc.toggleCouponCampaign(cam.id);
+      if (res.status === 200) {
+        cam.is_active = res.data?.is_active ?? !cam.is_active;
+      }
+    } catch (e) {
+      console.error('Error toggling campaign', e);
+    } finally {
+      cam.isToggling = false;
+    }
+  }
+
+  async deleteCampaign(id: string) {
+    const confirmed = confirm('Are you sure you want to permanently delete this campaign and all its coupons? This action cannot be undone.');
+    if (confirmed) {
+      try {
+        const res = await this.apisSvc.deleteCouponCampaign(id);
+        if (res.status === 200) {
+          this.loadCampaigns();
+        }
+      } catch (e) {
+        console.error('Error deleting campaign', e);
+      }
     }
   }
 }

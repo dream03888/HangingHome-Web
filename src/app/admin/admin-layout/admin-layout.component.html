@@ -87,6 +87,34 @@
                         {{ 'LAYOUT.SETTINGS' | translate }}
                     </a>
                 </li>
+
+                <li class="nav-divider" *ngIf="currentUser?.role === 'superadmin'"></li>
+                <li class="nav-group-title" *ngIf="currentUser?.role === 'superadmin'">CONTROL PANEL</li>
+
+                <li *ngIf="currentUser?.role === 'superadmin'">
+                    <a routerLink="/admin/control-panel/members" routerLinkActive="active" class="nav-link" style="color: #10b981;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        {{ 'CONTROL_PANEL.MEMBERS' | translate }}
+                    </a>
+                </li>
+                <li *ngIf="currentUser?.role === 'superadmin'">
+                    <a routerLink="/admin/control-panel/groups" routerLinkActive="active" class="nav-link" style="color: #3b82f6;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        {{ 'CONTROL_PANEL.MEMBER_GROUPS' | translate }}
+                    </a>
+                </li>
+                <li *ngIf="currentUser?.role === 'superadmin'">
+                    <a routerLink="/admin/control-panel/credit-cards" routerLinkActive="active" class="nav-link" style="color: #6366f1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                        {{ 'CONTROL_PANEL.CREDIT_CARDS' | translate }}
+                    </a>
+                </li>
+                <li *ngIf="currentUser?.role === 'superadmin'">
+                    <a routerLink="/admin/control-panel/payment-config" routerLinkActive="active" class="nav-link" style="color: #f59e0b;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                        {{ 'CONTROL_PANEL.PAYMENT_CONFIG' | translate }}
+                    </a>
+                </li>
             </ul>
         </nav>
 

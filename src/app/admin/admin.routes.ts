@@ -34,6 +34,8 @@ export const ADMIN_ROUTES: Routes = [
       // Coupons (Universal Batch System)
       { path: 'coupons', loadComponent: () => import('./promotions/coupon-list/coupon-list.component').then(m => m.CouponListComponent) },
       { path: 'coupons/new', loadComponent: () => import('./promotions/coupon-form/coupon-form.component').then(m => m.CouponFormComponent) },
+      { path: 'coupons/:id/edit', loadComponent: () => import('./promotions/coupon-form/coupon-form.component').then(m => m.CouponFormComponent) },
+      { path: 'coupons/:id/usage/:name', loadComponent: () => import('./promotions/coupon-usage/coupon-usage.component').then(m => m.CouponUsageComponent) },
 
       {
         path: 'promotions/:id/usage/:code',
@@ -55,17 +57,57 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [StoreAccessGuard],
         loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
-
+      
       // Settings (Super Admin Only)
       {
         path: 'settings',
         canActivate: [SuperAdminGuard],
-        loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent),
         children: [
           { path: '', redirectTo: 'users', pathMatch: 'full' },
           { path: 'users', loadComponent: () => import('./settings/user-list/user-list.component').then(m => m.UserListComponent) },
           { path: 'users/new', loadComponent: () => import('./settings/user-form/user-form.component').then(m => m.UserFormComponent) },
           { path: 'users/:id/edit', loadComponent: () => import('./settings/user-form/user-form.component').then(m => m.UserFormComponent) }
+        ]
+      },
+
+      // Control Panel
+      {
+        path: 'control-panel',
+        canActivate: [SuperAdminGuard],
+        children: [
+          { path: '', redirectTo: 'members', pathMatch: 'full' },
+          { 
+            path: 'members', 
+            loadComponent: () => import('./control-panel/member-list/member-list.component').then(m => m.MemberListComponent) 
+          },
+          { 
+            path: 'members/new', 
+            loadComponent: () => import('./control-panel/member-form/member-form.component').then(m => m.MemberFormComponent) 
+          },
+          { 
+            path: 'members/:id/edit', 
+            loadComponent: () => import('./control-panel/member-form/member-form.component').then(m => m.MemberFormComponent) 
+          },
+          {
+            path: 'groups',
+            loadComponent: () => import('./control-panel/member-groups/member-groups.component').then(m => m.MemberGroupsComponent)
+          },
+          {
+            path: 'credit-cards',
+            loadComponent: () => import('./control-panel/credit-cards/credit-cards.component').then(m => m.CreditCardsComponent)
+          },
+          {
+            path: 'credit-cards/new',
+            loadComponent: () => import('./control-panel/credit-card-form/credit-card-form.component').then(m => m.CreditCardFormComponent)
+          },
+          {
+            path: 'credit-cards/:id/edit',
+            loadComponent: () => import('./control-panel/credit-card-form/credit-card-form.component').then(m => m.CreditCardFormComponent)
+          },
+          {
+            path: 'payment-config',
+            loadComponent: () => import('./control-panel/payment-config/payment-config.component').then(m => m.PaymentConfigComponent)
+          }
         ]
       }
     ]

@@ -260,10 +260,9 @@ export class PromotionFormComponent implements OnInit {
 
     async loadPromotionDetails() {
         try {
-            const res = await this.apisService.getPromotions('');
+            const res = await this.apisService.getPromotionById(this.promoId!);
             if (res.status === 200) {
-                const promotions: Promotion[] = res.msg || [];
-                const promo = promotions.find(p => p.id === this.promoId);
+                const promo = res.msg;
                 if (promo) {
                     this.promoForm.patchValue({
                         code: promo.code,
@@ -278,13 +277,9 @@ export class PromotionFormComponent implements OnInit {
 
                     // Set initial product selections
                     this.selectedProductIds.clear();
-                    this.storeProducts.forEach(group => {
-                        group.products.forEach(p => {
-                            if (p.promotion_id === this.promoId) {
-                                this.selectedProductIds.add(p.product_id);
-                            }
-                        });
-                    });
+                    if (promo.target_type === 'product' && promo.product_ids && promo.product_ids.length > 0) {
+                        promo.product_ids.forEach((id: string) => this.selectedProductIds.add(id));
+                    }
                 }
             }
         } catch (e) {

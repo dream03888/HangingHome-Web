@@ -44,6 +44,7 @@ export class MenuFormComponent implements OnInit {
   targetStores: Store[] = [];
   selectedPublishStoreIds: Set<string> = new Set();
   isMasterLinked = false;
+  alreadySyncedStoreIds: Set<string> = new Set();
 
   ngOnInit() {
     this.menuForm = this.fb.group({
@@ -52,9 +53,6 @@ export class MenuFormComponent implements OnInit {
       price: [0, [Validators.required, Validators.min(0)]],
       isActive: [true],
       imageUrl: [''],
-      hasDiscount: [false],
-      discountType: ['percentage'],
-      discountValue: [0],
       promotionId: [''],
       options: this.fb.array([])
     });
@@ -123,11 +121,12 @@ export class MenuFormComponent implements OnInit {
             price: menu.price,
             product_active: menu.product_active,
             imageUrl: menu.image_url || '',
-            hasDiscount: !!menu.discount_type && (menu.discount_value ?? 0) > 0,
-            discountType: menu.discount_type || 'percentage',
-            discountValue: menu.discount_value || 0,
             promotionId: menu.promotion_id || ''
           });
+
+          if (this.isMasterCatalog && menuId) {
+            this.fetchSyncStatus(menuId);
+          }
           this.imagePreview = menu.image_url || null;
           this.isMasterLinked = !!menu.master_product_id;
 
@@ -251,12 +250,8 @@ export class MenuFormComponent implements OnInit {
       }
     }
 
-    let discount_type = null;
-    let discount_value = 0;
-    if (formValue.hasDiscount && formValue.discountValue > 0) {
-      discount_type = formValue.discountType;
-      discount_value = formValue.discountValue;
-    }
+    const discount_type: "amount" | "percentage" | undefined = undefined;
+    const discount_value = 0;
 
     const dbItems: MenuOption[] = formValue.options.map((opt: any) => ({
       group_name: opt.name,
@@ -292,11 +287,10 @@ export class MenuFormComponent implements OnInit {
     try {
       const res = await this.apisService.getPromotions('');
       if (res.status === 200) {
-        let promoList: Promotion[] = res.msg || [];
-        if (this.isMasterCatalog) {
-          promoList = promoList.filter(p => p.target_type === 'product');
-        }
-        this.promotions = promoList;
+        const allPromos: Promotion[] = res.msg || [];
+        // Always filter to only product-level promotions for menu linking.
+        // Bill-level promotions are applied at checkout and should not appear here.
+        this.promotions = allPromos.filter(p => p.target_type === 'product');
       }
     } catch (e) {
       console.error('Error fetching global promotions', e);
@@ -351,6 +345,17 @@ export class MenuFormComponent implements OnInit {
       } catch (err) {
         console.error(`Failed to publish to store ${targetId}`, err);
       }
+    }
+  }
+
+  async fetchSyncStatus(masterProductId: string) {
+    try {
+      const res = await this.apisService.getSyncStatus(masterProductId);
+      if (res.status === 200 && Array.isArray(res.msg)) {
+        this.alreadySyncedStoreIds = new Set(res.msg);
+      }
+    } catch (error) {
+      console.error('Failed to fetch sync status', error);
     }
   }
 
@@ -439,17 +444,16 @@ export class MenuFormComponent implements OnInit {
     // Previously this incorrectly locked all local products.
     if (!this.isMasterCatalog && this.isEditMode && this.isMasterLinked) {
       const lockedFields = [
-        'name', 'nameEn', 'imageUrl', 'promotionId',
-        'options', 'hasDiscount', 'discountType', 'discountValue'
+        'name', 'nameEn'
       ];
 
       lockedFields.forEach(field => {
         this.menuForm.get(field)?.disable();
       });
 
-      // Instead of completely disabling the options FormArray, we only disable metadata fields,
-      // so local stores can still adjust their own Option Prices.
-      this.lockMasterOptionsExceptPrice();
+      // In Phase 31, we now ALLOW local stores to manage their own addons.
+      // So we DO NOT call lockMasterOptionsExceptPrice anymore if they want flexibility.
+      // this.lockMasterOptionsExceptPrice();
     }
   }
 

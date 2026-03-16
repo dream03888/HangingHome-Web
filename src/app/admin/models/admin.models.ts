@@ -4,6 +4,8 @@ export interface Store {
     name_eng?: string;
     description?: string;
     is_stock_enabled?: boolean; // Phase 3 Inventory Support
+    allow_tables?: boolean;     // Phase 43 Table Booking
+    table_count?: number;       // Phase 43 Table Booking
     createdAt: Date;
 }
 
@@ -105,4 +107,5 @@ export interface Promotion {
     usage_limit?: number | null;
     used_count?: number;
     created_at?: string;
+    isToggling?: boolean; // UI state for toggle spinner
 }

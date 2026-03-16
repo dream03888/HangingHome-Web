@@ -1,0 +1,78 @@
+<div class="form-container">
+    <header class="page-header">
+        <div class="title-section">
+            <button class="btn-back" routerLink="/admin/control-panel/members">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <h1>{{ (isEdit ? 'MEMBERS.EDIT_TITLE' : 'MEMBERS.CREATE_TITLE') | translate }}</h1>
+        </div>
+    </header>
+
+    <div class="card form-card">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="form-grid">
+                <!-- Member Code -->
+                <div class="form-group full-width">
+                    <label>{{ 'MEMBERS.ID_LABEL' | translate }} <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" formControlName="member_code" placeholder="e.g. MEM1001" [readonly]="isEdit">
+                        <span class="hint">{{ 'MEMBERS.ID_HINT' | translate }}</span>
+                    </div>
+                </div>
+
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label>{{ 'MEMBERS.NAME_LABEL' | translate }} <span class="required">*</span></label>
+                    <input type="text" formControlName="name" [placeholder]="'MEMBERS.NAME_PLACEHOLDER' | translate">
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label>{{ 'MEMBERS.PHONE_LABEL' | translate }}</label>
+                    <input type="tel" formControlName="phone" placeholder="e.g. 081-234-5678">
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label>{{ 'MEMBERS.EMAIL_LABEL' | translate }}</label>
+                    <input type="email" formControlName="email" placeholder="e.g. member@email.com">
+                </div>
+
+                <!-- Member Group -->
+                <div class="form-group">
+                    <label>{{ 'MEMBERS.GROUP_LABEL' | translate }}</label>
+                    <select formControlName="group_id">
+                        <option [ngValue]="null">{{ 'MEMBERS.GENERAL_NO_GROUP' | translate }}</option>
+                        <option *ngFor="let group of groups" [value]="group.id">{{group.name}}</option>
+                    </select>
+                    <span class="hint">{{ 'MEMBERS.GROUP_HINT' | translate }}</span>
+                </div>
+
+                <!-- Initial Points -->
+                <div class="form-group" *ngIf="!isEdit">
+                    <label>{{ 'MEMBERS.POINTS_LABEL' | translate }}</label>
+                    <input type="number" formControlName="points" placeholder="e.g. 100">
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                    <label>{{ 'MEMBERS.STATUS_LABEL' | translate }}</label>
+                    <div class="toggle-group">
+                        <label class="switch">
+                            <input type="checkbox" formControlName="is_active">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="status-label">{{ (form.get('is_active')?.value ? 'MEMBERS.ACTIVE' : 'MEMBERS.INACTIVE') | translate }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <button type="button" class="btn btn-cancel" routerLink="/admin/control-panel/members">{{ 'COMMON.CANCEL' | translate }}</button>
+                <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isLoading">
+                    {{ (isLoading ? 'COMMON.SAVING' : (isEdit ? 'MEMBERS.SAVE_CHANGES' : 'MEMBERS.CREATE_MEMBER')) | translate }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

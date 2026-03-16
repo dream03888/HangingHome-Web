@@ -117,14 +117,24 @@
                         <div class="store-selection-list"
                             style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-soft); border-radius: 8px; padding: 12px; background: var(--surface-hover);">
                             <label *ngFor="let target of targetStores"
-                                style="display: flex; align-items: center; padding: 8px; border-bottom: 1px solid var(--border-soft); cursor: pointer;">
-                                <input type="checkbox" [checked]="selectedPublishStoreIds.has(target.id)"
-                                    (change)="togglePublishStoreSelection(target.id)"
-                                    style="width: 18px; height: 18px; accent-color: var(--primary); margin-right: 12px;">
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 500; color: var(--text);">{{ target.name }}</div>
-                                    <div style="font-size: 0.85rem; color: var(--text-muted);" *ngIf="target.name_eng">
-                                        {{ target.name_eng }}</div>
+                                style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-soft); cursor: pointer;"
+                                [style.background]="alreadySyncedStoreIds.has(target.id) ? 'rgba(52, 211, 153, 0.05)' : 'transparent'">
+                                <div style="display: flex; align-items: center; flex: 1;">
+                                    <input type="checkbox" [checked]="selectedPublishStoreIds.has(target.id)"
+                                        (change)="togglePublishStoreSelection(target.id)"
+                                        style="width: 18px; height: 18px; accent-color: var(--primary); margin-right: 12px;">
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="font-weight: 500; color: var(--text);">{{ target.name }}</div>
+                                            <span *ngIf="alreadySyncedStoreIds.has(target.id)"
+                                                style="font-size: 0.75rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 99px; font-weight: 600;">
+                                                Synced
+                                            </span>
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: var(--text-muted);"
+                                            *ngIf="target.name_eng">
+                                            {{ target.name_eng }}</div>
+                                    </div>
                                 </div>
                             </label>
                             <div *ngIf="targetStores.length === 0" class="text-center text-muted"
@@ -139,51 +149,11 @@
 
                 <hr class="divider">
 
-                <!-- Discount Section (Temporarily Hidden) 
-                <div class="form-group">
-                    <div class="discount-header">
-                        <label class="mb-0">{{ 'MENU.DISCOUNT_OPT' | translate }}</label>
-                        <label class="toggle-switch small">
-                            <input type="checkbox" formControlName="hasDiscount">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="discount-config" *ngIf="menuForm.get('hasDiscount')?.value">
-                        <div class="form-row mt-3">
-                            <div class="form-group flex-1 mb-0">
-                                <label for="discountType">{{ 'MENU.TYPE' | translate }}</label>
-                                <select id="discountType" formControlName="discountType" class="form-control">
-                                    <option value="percentage">{{ 'MENU.PERCENT' | translate }}</option>
-                                    <option value="amount">{{ 'MENU.AMOUNT' | translate }}</option>
-                                </select>
-                            </div>
-                            <div class="form-group flex-1 mb-0">
-                                <label for="discountValue">{{ 'MENU.VALUE' | translate }}</label>
-                                <input type="number" id="discountValue" formControlName="discountValue"
-                                    class="form-control" placeholder="0">
-                            </div>
-                        </div>
-                        <p class="help-text">
-                            {{ 'MENU.FINAL_PRICE' | translate }}:
-                            <strong>
-                                {{
-                                menuForm.get('discountType')?.value === 'percentage'
-                                ? (menuForm.get('price')?.value * (1 - menuForm.get('discountValue')?.value / 100))
-                                : (menuForm.get('price')?.value - menuForm.get('discountValue')?.value) | number:'1.0-0'
-                                }} THB
-                            </strong>
-                        </p>
-                    </div>
-                </div>
-
-                <hr class="divider">
-
                 <!-- Options / Add-ons Section -->
-                <div class="form-group" [class.options-disabled]="isMasterLinked">
+                <div class="form-group">
                     <div class="options-header">
                         <h3>{{ 'OPTION.TITLE' | translate }}</h3>
-                        <div style="display: flex; align-items: center; gap: 8px;" *ngIf="!isMasterLinked">
+                        <div style="display: flex; align-items: center; gap: 8px;">
                             <button *ngIf="authService.hasPermission('manage_menus')" type="button"
                                 class="btn-secondary small-btn"
                                 style="border-color: var(--primary); color: var(--primary);"
@@ -197,25 +167,13 @@
                                 </svg>
                                 {{ 'OPTION.IMPORT_MASTER' | translate }}
                             </button>
-                            <!-- Disabled manual option creation according to user request
+                            <!-- Re-enabled local addon adding for flexibility -->
                             <button type="button" class="btn-secondary small-btn" (click)="addOption()">{{ 'OPTION.ADD'
                                 | translate }}</button>
-                            -->
                         </div>
                     </div>
 
-                    <div *ngIf="isMasterLinked" class="master-linked-warning mb-3"
-                        style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 12px; color: #60a5fa;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                        <span style="font-size: 0.9rem;">{{ 'MENU.SYNCED_MASTER' | translate }}: {{ 'OPTION.SUB' |
-                            translate }}</span>
-                    </div>
-                    <p class="help-text mb-3" *ngIf="!isMasterLinked">{{ 'OPTION.SUB' | translate }}</p>
+                    <p class="help-text mb-3">{{ 'OPTION.SUB' | translate }}</p>
 
                     <div formArrayName="options" class="options-list">
                         <div class="option-card" *ngFor="let opt of options.controls; let i = index"
@@ -290,12 +248,10 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <!-- Disabled manual choice creation according to user request
-                                <div class="choices-actions" *ngIf="!isMasterLinked">
+                                <div class="choices-actions">
                                     <button type="button" class="btn-text small" (click)="addChoice(i)">+ {{
                                         'OPTION.ADD_CHOICE' | translate }}</button>
                                 </div>
-                                -->
                             </div>
                         </div>
                     </div>
@@ -303,7 +259,7 @@
 
                 <hr class="divider">
 
-                <!-- Image Upload (Temporarily Hidden) 
+                <!-- Image Upload Section (Unlocked) -->
                 <div class="form-group">
                     <label for="imageUrl">{{ 'MENU.IMAGE_PREVIEW' | translate }} <span
                             class="text-muted">(Optional)</span></label>
@@ -311,7 +267,6 @@
                         class="form-control">
                     <p class="help-text">Select an image file from your computer.</p>
                 </div>
-                -->
 
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" (click)="goBack()">{{ 'COMMON.CANCEL' | translate

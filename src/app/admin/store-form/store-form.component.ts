@@ -36,7 +36,9 @@ export class StoreFormComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       nameEn: [''],
       description: [''],
-      isStockEnabled: [false]
+      isStockEnabled: [false],
+      allowTables: [false],
+      tableCount: [0]
     });
 
     this.route.paramMap.subscribe(params => {
@@ -49,7 +51,9 @@ export class StoreFormComponent implements OnInit {
             name: store.name,
             nameEn: store.name_eng || '',
             description: store.description,
-            isStockEnabled: store.is_stock_enabled || false
+            isStockEnabled: store.is_stock_enabled || false,
+            allowTables: store.allow_tables || false,
+            tableCount: store.table_count || 0
           });
         }
       }
@@ -73,21 +77,30 @@ export class StoreFormComponent implements OnInit {
       name_eng: formValue.nameEn,
       description: formValue.description,
       is_stock_enabled: formValue.isStockEnabled,
+      allow_tables: formValue.allowTables,
+      table_count: formValue.tableCount,
       createdAt: new Date()
     };
 
     let res;
     if (this.isEditMode && this.storeId) {
-      res = await this.apisService.UpdateStore(this.storeId, store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled);
+      res = await this.apisService.UpdateStore(this.storeId, store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled, formValue.allowTables, formValue.tableCount);
     } else {
-      res = await this.apisService.CreateStore(store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled);
+      res = await this.apisService.CreateStore(store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled, formValue.allowTables, formValue.tableCount);
     }
 
     if (res.status == 200) {
       console.log(this.isEditMode ? 'UpdateStore' : 'CreateStore', res.msg);
 
       if (this.isEditMode) {
-        this.adminData.updateStore(store.id, { name: store.name, name_eng: store.name_eng, description: store.description, is_stock_enabled: store.is_stock_enabled });
+        this.adminData.updateStore(store.id, { 
+          name: store.name, 
+          name_eng: store.name_eng, 
+          description: store.description, 
+          is_stock_enabled: store.is_stock_enabled,
+          allow_tables: store.allow_tables,
+          table_count: store.table_count
+        });
       } else {
         this.adminData.saveStore(store);
       }

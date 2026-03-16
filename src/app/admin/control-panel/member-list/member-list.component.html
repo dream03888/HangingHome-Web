@@ -1,0 +1,89 @@
+<div class="member-container">
+    <header class="page-header">
+        <div class="title-section">
+            <h1>{{ 'MEMBERS.LIST_TITLE' | translate }}</h1>
+            <p class="subtitle">{{ 'MEMBERS.LIST_SUB' | translate }}</p>
+        </div>
+        <div class="action-section">
+            <button class="btn btn-primary" routerLink="/admin/control-panel/members/new">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                {{ 'COMMON.ADD' | translate }}
+            </button>
+        </div>
+    </header>
+
+    <div class="filters-card card">
+        <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" [(ngModel)]="searchQuery" (input)="onFilterChange()" [placeholder]="'MEMBERS.SEARCH_PLACEHOLDER' | translate">
+        </div>
+        <div class="filter-group">
+            <select [(ngModel)]="selectedGroupId" (change)="onFilterChange()">
+                <option value="">{{ 'MEMBERS.ALL_GROUPS' | translate }}</option>
+                <option *ngFor="let group of groups" [value]="group.id">{{group.name}}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-card card">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ 'MEMBERS.CODE' | translate }}</th>
+                        <th>{{ 'MEMBERS.NAME' | translate }}</th>
+                        <th>{{ 'MEMBERS.PHONE' | translate }}</th>
+                        <th>{{ 'MEMBERS.GROUP' | translate }}</th>
+                        <th>{{ 'MEMBERS.POINTS' | translate }}</th>
+                        <th>{{ 'MEMBERS.STATUS' | translate }}</th>
+                        <th class="text-right">{{ 'COMMON.ACTIONS' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let member of members">
+                        <td><span class="member-code">{{member.member_code}}</span></td>
+                        <td>
+                            <div class="member-info">
+                                <span class="member-name">{{member.name}}</span>
+                                <span class="member-email">{{member.email || ('MEMBERS.NO_EMAIL' | translate)}}</span>
+                            </div>
+                        </td>
+                        <td>{{member.phone || '-'}}</td>
+                        <td>
+                            <span class="group-badge" [style.background-color]="member.group_name ? 'rgba(79, 70, 229, 0.1)' : 'rgba(107, 114, 128, 0.1)'" [style.color]="member.group_name ? '#4f46e5' : '#6b7280'">
+                                {{member.group_name || ('MEMBERS.GENERAL_GROUP' | translate)}}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="points-display" (click)="showTransactions(member)">
+                                <span class="points-value">{{member.points | number}}</span>
+                                <span class="pts-label">PTS</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge" [class.active]="member.is_active" [class.inactive]="!member.is_active">
+                                {{ (member.is_active ? 'MEMBERS.ACTIVE' : 'MEMBERS.INACTIVE') | translate }}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            <div class="action-buttons">
+                                <button class="btn-icon" [routerLink]="['/admin/control-panel/members', member.id, 'edit']" [title]="'COMMON.EDIT' | translate">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                                <button class="btn-icon delete" (click)="deleteMember(member.id)" [title]="'COMMON.REMOVE' | translate">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr *ngIf="members.length === 0 && !isLoading">
+                        <td colspan="7" class="empty-state">{{ 'MEMBERS.EMPTY' | translate }}</td>
+                    </tr>
+                    <tr *ngIf="isLoading">
+                        <td colspan="7" class="loading-state">{{ 'MEMBERS.LOADING' | translate }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

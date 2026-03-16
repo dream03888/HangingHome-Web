@@ -1,0 +1,82 @@
+<div class="payment-config-container">
+    <header class="page-header">
+        <div class="title-section">
+            <h1>{{ 'CONTROL_PANEL.PAYMENT_CONFIG' | translate }}</h1>
+            <p class="subtitle">{{ 'PAYMENT_CONFIG.SUBTITLE' | translate }}</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline sync" (click)="triggerSync()" [disabled]="isLoading">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 1.9 0 3.6.7 4.9 1.9L21.5 10M2.5 14l6.6 4.1C10.4 19.3 12.1 20 14 20c4.4 0 8-3.6 8-8"/></svg>
+                Sync to Kiosks
+            </button>
+            <button class="btn btn-primary" (click)="saveConfig()" [disabled]="isLoading">
+                <svg *ngIf="!isLoading" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                {{ (isLoading ? 'COMMON.SAVING' : 'COMMON.SAVE') | translate }}
+            </button>
+        </div>
+    </header>
+
+    <div class="methods-grid solo" *ngIf="cashMethod">
+        <div class="method-card card cash" [class.disabled]="!cashMethod.enabled">
+            <div class="method-icon-bg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+            </div>
+            <div class="method-info">
+                <h3>{{cashMethod.name}}</h3>
+                <p>{{ 'PAYMENT_CONFIG.ALLOW' | translate }} {{cashMethod.name}}</p>
+            </div>
+            <div class="method-action">
+                <label class="switch">
+                    <input type="checkbox" [checked]="cashMethod.enabled" (change)="toggleMethod(cashMethod)">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other Payments Section -->
+    <div class="section-header">
+        <h2 class="title">{{ 'PAYMENT_CONFIG.EDC_SECTION' | translate }}</h2>
+        <button class="btn btn-outline" (click)="addEDCMethod()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            {{ 'PAYMENT_CONFIG.ADD_EDC' | translate }}
+        </button>
+    </div>
+
+    <div class="methods-grid">
+        <div class="method-card card" *ngFor="let method of otherMethods" [class.disabled]="!method.enabled">
+            <div class="method-icon-bg">
+                <svg *ngIf="method.id === 'PROMPTPAY'" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/><rect x="7" y="14" width="3" height="3"/><rect x="14" y="14" width="3" height="3"/></svg>
+                <svg *ngIf="method.id === 'CREDIT_CARD' || method.id.startsWith('EDC_')" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                <svg *ngIf="method.id === 'MEMBER_POINTS'" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            
+            <div class="method-info">
+                <h3>{{method.name}}</h3>
+                <div class="ghl-params" *ngIf="method.id !== 'MEMBER_POINTS'">
+                    <span class="param"><b>T:</b> {{method.trade_type || '-'}}</span>
+                    <span class="param"><b>S:</b> {{method.service_type || '-'}}</span>
+                </div>
+                <p *ngIf="method.id === 'MEMBER_POINTS'">{{ 'PAYMENT_CONFIG.ALLOW' | translate }} {{method.name}}</p>
+            </div>
+
+            <div class="method-footer-actions">
+                <button class="btn-icon" (click)="editMethod(method)" *ngIf="method.id !== 'MEMBER_POINTS'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button class="btn-icon delete" (click)="deleteMethod(method.id)" *ngIf="method.id.startsWith('EDC_')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+                <label class="switch">
+                    <input type="checkbox" [checked]="method.enabled" (change)="toggleMethod(method)">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <p>{{ 'PAYMENT_CONFIG.SYNC_HINT' | translate }}</p>
+    </div>
+</div>

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { ApisService } from '../../services/apis.service';
 
@@ -17,7 +17,7 @@ import { ApisService } from '../../services/apis.service';
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           </button>
           <div>
-            <h2 class="page-title">{{ 'COUPON.ADD' | translate }}</h2>
+            <h2 class="page-title">{{ isEditMode ? 'Edit Campaign' : ('COUPON.ADD' | translate) }}</h2>
             <p class="page-subtitle">{{ 'COUPON.SUBTITLE' | translate }}</p>
           </div>
         </div>
@@ -34,7 +34,7 @@ import { ApisService } from '../../services/apis.service';
                 <input type="text" formControlName="name" class="form-control" [placeholder]="'COUPON.NAME' | translate">
               </div>
 
-              <div class="form-row">
+              <div class="form-row" *ngIf="!isEditMode">
                 <div class="form-group flex-1">
                   <label>{{ 'COUPON.PREFIX' | translate }} <span class="required">*</span></label>
                   <input type="text" formControlName="prefix" class="form-control" placeholder="e.g. SK2026" (input)="onPrefixInput($event)">
@@ -43,6 +43,26 @@ import { ApisService } from '../../services/apis.service';
                 <div class="form-group flex-1">
                   <label>{{ 'COUPON.COUNT' | translate }} <span class="required">*</span></label>
                   <input type="number" formControlName="count" class="form-control" min="1" max="5000">
+                </div>
+              </div>
+
+              <div class="form-row" *ngIf="isEditMode">
+                <div class="form-group flex-1">
+                  <label>Batch Prefix</label>
+                  <input type="text" class="form-control" [value]="editingCampaign?.prefix || ''" disabled style="opacity: 0.5;">
+                  <small class="help-text">Prefix cannot be changed after creation.</small>
+                </div>
+                <!-- Inline Add More Coupons Section -->
+                <div class="form-group flex-1" style="background: rgba(var(--primary-rgb), 0.05); padding: 16px; border-radius: 12px; border: 1px dashed var(--primary-soft); margin-bottom: 0;">
+                  <label style="color: var(--primary);">Generate More Coupons</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="number" #addMoreInput class="form-control" min="1" max="1000" placeholder="Qty" style="background: var(--surface);">
+                    <button type="button" class="btn-primary" (click)="addMoreCoupons(addMoreInput.value, addMoreInput)" [disabled]="isGeneratingMore" style="padding: 0 16px; min-width: 100px;">
+                       <span *ngIf="!isGeneratingMore">Add</span>
+                       <div class="spinner" *ngIf="isGeneratingMore" style="width: 14px; height: 14px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    </button>
+                  </div>
+                  <small class="help-text">Instantly adds to this campaign.</small>
                 </div>
               </div>
 
@@ -139,7 +159,7 @@ import { ApisService } from '../../services/apis.service';
               <button type="button" class="btn-secondary" routerLink="/admin/coupons">{{ 'COMMON.CANCEL' | translate }}</button>
               <button type="submit" class="btn-primary" [disabled]="isLoading || couponForm.invalid">
                 <div class="spinner" *ngIf="isLoading" style="width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                {{ isLoading ? ('COUPON.GENERATING' | translate) : ('COUPON.GENERATE' | translate) }}
+                {{ isLoading ? ('COUPON.GENERATING' | translate) : (isEditMode ? 'Save Changes' : ('COUPON.GENERATE' | translate)) }}
               </button>
             </div>
           </form>
@@ -220,6 +240,9 @@ import { ApisService } from '../../services/apis.service';
 export class CouponFormComponent implements OnInit {
   couponForm!: FormGroup;
   isLoading = false;
+  isEditMode = false;
+  isGeneratingMore = false;
+  editingCampaign: any = null;
   stores: any[] = [];
   selectedStoreIds: string[] = [];
 
@@ -230,10 +253,17 @@ export class CouponFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private apisSvc = inject(ApisService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   ngOnInit() {
     this.initForm();
-    this.loadInitialData();
+    const campaignId = this.route.snapshot.paramMap.get('id');
+    if (campaignId) {
+      this.isEditMode = true;
+      this.loadInitialData(campaignId);
+    } else {
+      this.loadInitialData();
+    }
   }
 
   initForm() {
@@ -249,15 +279,37 @@ export class CouponFormComponent implements OnInit {
     });
   }
 
-  async loadInitialData() {
+  async loadInitialData(campaignId?: string) {
     try {
       const storesRes = await this.apisSvc.GetStore();
       if (storesRes.status === 200) this.stores = storesRes.msg;
 
-      const productsRes = await this.apisSvc.getProduct(''); // Fetches from Master Store
+      const productsRes = await this.apisSvc.getProduct('');
       if (productsRes.status === 200) {
         this.masterProducts = productsRes.msg;
-        console.log("Master Products Loaded:", this.masterProducts.length);
+      }
+
+      if (campaignId) {
+        const camRes = await this.apisSvc.getCouponCampaignById(campaignId);
+        if (camRes.status === 200) {
+          const cam = camRes.msg;
+          this.editingCampaign = cam;
+          this.couponForm.patchValue({
+            name: cam.name,
+            discount_type: cam.discount_type,
+            discount_value: cam.discount_value,
+            start_date: cam.start_date ? cam.start_date.substring(0, 10) : '',
+            end_date: cam.end_date ? cam.end_date.substring(0, 10) : '',
+            is_all_bill: cam.is_all_bill
+          });
+          this.selectedStoreIds = cam.store_ids || [];
+          // Map product IDs back to product objects
+          if (cam.product_ids && cam.product_ids.length > 0) {
+            this.selectedProducts = this.masterProducts.filter(p =>
+              cam.product_ids.includes(p.product_id)
+            );
+          }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -320,7 +372,13 @@ export class CouponFormComponent implements OnInit {
     };
 
     try {
-      const res = await this.apisSvc.createCouponCampaign(data);
+      let res;
+      if (this.isEditMode && this.editingCampaign) {
+        res = await this.apisSvc.updateCouponCampaign({ ...data, id: this.editingCampaign.id });
+      } else {
+        res = await this.apisSvc.createCouponCampaign(data);
+      }
+
       if (res.status === 200) {
         this.router.navigate(['/admin/coupons']);
       } else {
@@ -328,9 +386,35 @@ export class CouponFormComponent implements OnInit {
       }
     } catch (e) {
       console.error(e);
-      alert('Failed to generate campaign');
+      alert('Failed to save campaign');
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  async addMoreCoupons(val: string, inputElement: HTMLInputElement) {
+    const amount = parseInt(val, 10);
+    if (!amount || amount < 1 || amount > 5000) {
+        alert('Please enter a valid amount between 1 and 5000');
+        return;
+    }
+
+    if (!this.editingCampaign?.id) return;
+
+    this.isGeneratingMore = true;
+    try {
+        const res = await this.apisSvc.appendCoupons(this.editingCampaign.id, amount);
+        if (res.status === 200) {
+            alert(`Successfully added ${amount} more coupons to this campaign.`);
+            inputElement.value = ''; // clear input
+        } else {
+            alert('Error generating more coupons: ' + res.msg);
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Failed to generate more coupons.');
+    } finally {
+        this.isGeneratingMore = false;
     }
   }
 }

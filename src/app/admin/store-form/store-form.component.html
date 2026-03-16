@@ -51,16 +51,35 @@
                 <label class="toggle-container"
                     style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface);">
                     <div class="toggle-info" style="flex: 1;">
-                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">Enable Stock Management
-                            (Phase 3)</span>
-                        <span style="font-size: 0.875rem; color: var(--text-sub);">Opt-in inventory tracking, recipe
-                            BOMs, and raw material alerts for this store.</span>
+                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">Enable Stock Management</span>
+                        <span style="font-size: 0.875rem; color: var(--text-sub);">Opt-in inventory tracking and recipe BOMs for this store.</span>
                     </div>
                     <label class="toggle-switch ml-4">
                         <input type="checkbox" formControlName="isStockEnabled">
                         <span class="slider"></span>
                     </label>
                 </label>
+            </div>
+
+            <!-- Table Service (Phase 43) -->
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="toggle-container"
+                    style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface);">
+                    <div class="toggle-info" style="flex: 1;">
+                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">Enable Table Service (Booking)</span>
+                        <span style="font-size: 0.875rem; color: var(--text-sub);">Allow customers to select tables for Dine-In orders.</span>
+                    </div>
+                    <label class="toggle-switch ml-4">
+                        <input type="checkbox" formControlName="allowTables">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </div>
+
+            <div class="form-group" *ngIf="storeForm.get('allowTables')?.value" style="margin-top: 0.5rem; padding-left: 1rem;">
+                <label for="tableCount">Number of Tables</label>
+                <input type="number" id="tableCount" formControlName="tableCount" class="form-control" style="max-width: 150px;" placeholder="e.g. 10">
+                <small class="text-muted">Total available tables for this branch.</small>
             </div>
 
             <!-- Actions -->

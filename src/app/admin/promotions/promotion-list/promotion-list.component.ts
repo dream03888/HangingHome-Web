@@ -47,10 +47,7 @@ import { Promotion } from '../../models/admin.models';
                          <button class="action-btn" [routerLink]="[promo.id, 'usage', promo.code]" [title]="'View Usage History'">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         </button>
-                         <button class="action-btn" [routerLink]="[promo.id, 'edit']" *ngIf="canManageMenus">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                        <button class="action-btn delete" (click)="deletePromo(promo.id)" *ngIf="canManageMenus">
+                        <button class="action-btn delete" (click)="deletePromo(promo.id)" *ngIf="canManageMenus" title="Delete Promotion">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </div>
@@ -84,6 +81,26 @@ import { Promotion } from '../../models/admin.models';
                         <div class="usage-track">
                             <div class="usage-fill" [style.width.%]="(promo.used_count || 0) / promo.usage_limit * 100"></div>
                         </div>
+                    </div>
+
+                    <!-- Action Row: Toggle + Edit -->
+                    <div class="card-actions-row" *ngIf="canManageMenus">
+                        <button class="action-btn-wide edit-btn" [routerLink]="[promo.id, 'edit']" title="Edit Promotion">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Edit
+                        </button>
+                        <button class="action-btn-wide" [class.toggle-on]="promo.is_active" [class.toggle-off]="!promo.is_active"
+                        (click)="togglePromo(promo)" [disabled]="promo.isToggling" title="Toggle Active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        {{ promo.is_active ? 'Deactivate' : 'Activate' }}
+                        </button>
                     </div>
                 </div>
 
@@ -185,6 +202,37 @@ import { Promotion } from '../../models/admin.models';
             background: #ef4444;
             border-color: #ef4444;
         }
+    }
+
+    .card-actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .action-btn-wide {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border-soft);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+
+      &:hover { border-color: var(--brand-primary); background: rgba(var(--brand-primary-rgb), 0.1); color: var(--brand-primary); }
+      &:disabled { opacity: 0.4; cursor: not-allowed; }
+      &.edit-btn { color: var(--brand-primary); border-color: var(--brand-soft); }
+      &.toggle-on { color: #10b981; border-color: rgba(16,185,129,0.3); }
+      &.toggle-off { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+      &.toggle-on:hover { background: rgba(16,185,129,0.1); }
+      &.toggle-off:hover { background: rgba(239,68,68,0.1); }
     }
 
     .card-body {
@@ -383,6 +431,20 @@ export class PromotionListComponent implements OnInit {
             } catch (e) {
                 console.error('Error deleting promotion', e);
             }
+        }
+    }
+
+    async togglePromo(promo: any) {
+        promo.isToggling = true;
+        try {
+            const res = await this.apisService.togglePromotion(promo.id);
+            if (res.status === 200) {
+                promo.is_active = res.data?.is_active ?? !promo.is_active;
+            }
+        } catch (e) {
+            console.error('Error toggling promotion', e);
+        } finally {
+            promo.isToggling = false;
         }
     }
 

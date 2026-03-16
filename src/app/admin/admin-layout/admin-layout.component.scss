@@ -98,6 +98,21 @@
     }
 }
 
+.nav-divider {
+    height: 1px;
+    background: var(--border-soft);
+    margin: 16px 0;
+}
+
+.nav-group-title {
+    padding: 0 16px 8px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-sub);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
 /* Main Content */
 .main-content {
     flex: 1;
