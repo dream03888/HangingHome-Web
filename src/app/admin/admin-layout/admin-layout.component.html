@@ -31,6 +31,19 @@
                         {{ 'LAYOUT.MASTER_CATALOG' | translate }}
                     </a>
                 </li>
+                <li *ngIf="currentUser?.role === 'superadmin'">
+                    <a routerLink="/admin/stores/00000000-0000-0000-0000-000000000000/menu-sets" routerLinkActive="active"
+                        class="nav-link" style="color: #6366f1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-layers">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                            <polyline points="2 17 12 22 22 17" />
+                            <polyline points="2 12 12 17 22 12" />
+                        </svg>
+                        {{ 'LAYOUT.MASTER_CATEGORY' | translate }}
+                    </a>
+                </li>
                 <li *ngIf="currentUser?.role === 'superadmin' || currentUser?.role === 'storeadmin'">
                     <a routerLink="/admin/promotions" routerLinkActive="active" class="nav-link"
                         style="color: #ec4899;">

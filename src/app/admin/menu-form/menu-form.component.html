@@ -87,6 +87,15 @@
 
                 <div class="form-row">
                     <div class="form-group flex-1">
+                        <label for="menuSetId">{{ 'SET.TITLE' | translate }} <span class="text-muted">(Optional)</span></label>
+                        <select id="menuSetId" formControlName="menuSetId" class="form-control">
+                            <option value="">-- No Category --</option>
+                            <option *ngFor="let set of menuSets" [value]="set.id">{{ set.name }} <span *ngIf="set.nameEn">({{ set.nameEn }})</span></option>
+                        </select>
+                        <p class="help-text">Select a category for this product.</p>
+                    </div>
+
+                    <div class="form-group flex-1">
                         <label for="promotionId">Linked Promotion <span class="text-muted">(Optional)</span></label>
                         <select id="promotionId" formControlName="promotionId" class="form-control">
                             <option value="">-- No Promotion --</option>
@@ -127,8 +136,17 @@
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <div style="font-weight: 500; color: var(--text);">{{ target.name }}</div>
                                             <span *ngIf="alreadySyncedStoreIds.has(target.id)"
-                                                style="font-size: 0.75rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 99px; font-weight: 600;">
+                                                style="font-size: 0.75rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 99px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
                                                 Synced
+                                                <button type="button" (click)="$event.preventDefault(); unsyncFromStore(target.id)" 
+                                                    style="background: none; border: none; color: white; cursor: pointer; padding: 0; display: flex; align-items: center; opacity: 0.8;"
+                                                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"
+                                                    title="Un-sync this product from this store">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
                                             </span>
                                         </div>
                                         <div style="font-size: 0.85rem; color: var(--text-muted);"
@@ -253,6 +271,42 @@
                                         'OPTION.ADD_CHOICE' | translate }}</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Inventory Tracking Section -->
+                <div class="inventory-section">
+                    <div class="section-title">
+                        <h3>{{ 'MENU.INVENTORY_TITLE' | translate }}</h3>
+                        <p class="help-text">{{ 'STORE.STOCK_HINT' | translate }}</p>
+                    </div>
+
+                    <div class="form-row align-center mb-4">
+                        <div class="form-group mb-0">
+                            <label class="toggle-switch">
+                                <input type="checkbox" formControlName="isStockTracked">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="ml-3">
+                            <div style="font-weight: 500; color: var(--text);">{{ 'MENU.IS_STOCK_TRACKED' | translate }}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                Track stock level for this item directly (1-to-1)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row" *ngIf="menuForm.get('isStockTracked')?.value">
+                        <div class="form-group flex-1">
+                            <label for="stockQuantity">{{ 'MENU.STOCK_QUANTITY' | translate }}</label>
+                            <input type="number" id="stockQuantity" formControlName="stockQuantity" class="form-control" placeholder="0">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="minStockLevel">{{ 'MENU.MIN_STOCK_LEVEL' | translate }}</label>
+                            <input type="number" id="minStockLevel" formControlName="minStockLevel" class="form-control" placeholder="0">
                         </div>
                     </div>
                 </div>

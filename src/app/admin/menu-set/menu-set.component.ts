@@ -34,7 +34,10 @@ export class MenuSetComponent implements OnInit {
 
   ngOnInit() {
     this.setForm = this.fb.group({
+      id: [null],
       name: ['', Validators.required],
+      nameEn: [''],
+      sortOrder: [0],
       menuIds: [[], Validators.required]
     });
 
@@ -54,6 +57,16 @@ export class MenuSetComponent implements OnInit {
   }
 
   async loadStore(id: string) {
+    if (id === '00000000-0000-0000-0000-000000000000') {
+      this.store = {
+        id: id,
+        name: 'คลังเมนูส่วนกลาง',
+        name_eng: 'Master Catalog',
+        allow_tables: false,
+        table_count: 0
+      } as any;
+      return;
+    }
     try {
       const res = await this.apisService.GetStore();
       if (res.status === 200) {
@@ -103,22 +116,55 @@ export class MenuSetComponent implements OnInit {
     return menus.find(m => m.product_id === menuId)?.name || 'Unknown Item';
   }
 
-  onSubmit() {
+  editSet(set: MenuSet) {
+    this.showForm = true;
+    this.setForm.patchValue({
+      id: set.id,
+      name: set.name,
+      nameEn: set.nameEn || '',
+      sortOrder: (set as any).sortOrder || 0,
+      menuIds: set.menuIds
+    });
+  }
+
+  async deleteSet(id: string) {
+    if (!confirm('Are you sure you want to delete this category?')) return;
+    try {
+      const res = await this.apisService.deleteMenuSet(id);
+      if (res.status === 200) {
+        this.menuSets$ = this.adminData.getMenuSetsForStore(this.storeId);
+      }
+    } catch (err) {
+      console.error('Failed to delete set', err);
+    }
+  }
+
+  async onSubmit() {
     if (this.setForm.invalid) {
       this.setForm.markAllAsTouched();
       return;
     }
 
     const formValue = this.setForm.value;
-    const newSet: MenuSet = {
-      id: Math.random().toString(36).substring(2, 9),
+    const payload = {
+      id: formValue.id,
+      isNew: !formValue.id,
       storeId: this.storeId,
       name: formValue.name,
+      nameEn: formValue.nameEn,
+      sortOrder: formValue.sortOrder,
       menuIds: formValue.menuIds
     };
 
-    this.adminData.saveMenuSet(newSet);
-    this.toggleForm();
+    try {
+      const res = await this.adminData.saveMenuSet(payload);
+      if (res.status === 200) {
+        this.toggleForm();
+        this.menuSets$ = this.adminData.getMenuSetsForStore(this.storeId);
+      }
+    } catch (err) {
+      console.error('Failed to save menu set', err);
+    }
   }
 
   goBack() {

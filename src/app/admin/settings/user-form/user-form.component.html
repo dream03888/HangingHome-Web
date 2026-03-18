@@ -62,13 +62,19 @@
 
             <ng-container *ngIf="userForm.get('role')?.value === 'storeadmin'">
                 <div class="form-group">
-                    <label for="storeId">{{ 'USER.BIND_STORE' | translate }}</label>
-                    <select id="storeId" formControlName="storeId" class="form-control">
-                        <option value="">-- Select Assigned Store --</option>
-                        <option *ngFor="let store of stores" [value]="store.id">
-                            {{ store.name }}
-                        </option>
-                    </select>
+                    <label>{{ 'USER.STORES' | translate }}</label>
+                    <div class="store-grid">
+                        <div class="store-item" *ngFor="let store of stores">
+                            <label class="checkbox-container">
+                                <input type="checkbox" 
+                                       [value]="store.id" 
+                                       [checked]="isStoreSelected(store.id)"
+                                       (change)="onStoreToggle($event)">
+                                <span class="checkmark"></span>
+                                <span class="store-name-label">{{ store.name }}</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">

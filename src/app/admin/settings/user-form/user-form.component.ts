@@ -36,13 +36,13 @@ export class UserFormComponent implements OnInit {
   constructor() {
     this.userForm = this.fb.group({
       username: ['', Validators.required],
-      password: [''], // Only required on create normally, but leaving optional here
+      password: [''], 
       f_name: [''],
       l_name: [''],
       emp_code: [''],
       phone: [''],
       role: ['storeadmin', Validators.required],
-      storeId: [''],
+      storeIds: [[]], // Changed from storeId to storeIds
       permissions: [[]]
     });
   }
@@ -74,6 +74,12 @@ export class UserFormComponent implements OnInit {
         const users = res.msg || [];
         const user = users.find((u: any) => u.id.toString() === id.toString());
         if (user) {
+          // Backward compatibility: map single store_id if store_ids is empty
+          let assignedStores = user.store_ids || [];
+          if (assignedStores.length === 0 && user.store_id) {
+            assignedStores = [user.store_id];
+          }
+
           this.userForm.patchValue({
             username: user.username,
             f_name: user.f_name || '',
@@ -81,7 +87,7 @@ export class UserFormComponent implements OnInit {
             emp_code: user.emp_code || '',
             phone: user.phone || '',
             role: user.role,
-            storeId: user.store_id || '', // Use db mapping store_id
+            storeIds: assignedStores,
             permissions: user.permissions || []
           });
         } else {
@@ -91,6 +97,23 @@ export class UserFormComponent implements OnInit {
     } catch (err) {
       console.error('Failed to load user info', err);
     }
+  }
+
+  onStoreToggle(event: any) {
+    const value = event.target.value;
+    const isChecked = event.target.checked;
+    const currentStores = this.userForm.value.storeIds as string[];
+
+    if (isChecked) {
+      this.userForm.patchValue({ storeIds: [...currentStores, value] });
+    } else {
+      this.userForm.patchValue({ storeIds: currentStores.filter(id => id !== value) });
+    }
+  }
+
+  isStoreSelected(id: string): boolean {
+    const assigned = this.userForm.value.storeIds as string[];
+    return assigned.includes(id);
   }
 
   onPermissionToggle(event: any) {
@@ -117,7 +140,7 @@ export class UserFormComponent implements OnInit {
 
     // Clear store/permissions if superadmin
     if (formData.role === 'superadmin') {
-      formData.storeId = null;
+      formData.storeIds = [];
       formData.permissions = [];
     }
 
@@ -125,7 +148,6 @@ export class UserFormComponent implements OnInit {
       if (this.isEditMode && this.userId) {
         await this.apisService.updateUser({ ...formData, id: this.userId });
       } else {
-        // Create user MUST have a password
         if (!formData.password) formData.password = 'password';
         await this.apisService.createUser(formData);
       }

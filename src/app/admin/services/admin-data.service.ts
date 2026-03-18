@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Store, Menu, MenuSet } from '../models/admin.models';
+import { ApisService, IResponseMessage } from './apis.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,8 @@ export class AdminDataService {
 
 
 
+
+  private apisService = inject(ApisService);
 
   getStores(): Observable<Store[]> {
     return this.stores$.asObservable();
@@ -52,15 +55,19 @@ export class AdminDataService {
 
 
   getMenuSetsForStore(storeId: string): Observable<MenuSet[]> {
-    return new BehaviorSubject<MenuSet[]>(this.menuSets.filter(ms => ms.storeId === storeId)).asObservable();
+    return new Observable<MenuSet[]>(observer => {
+      this.apisService.getMenuSets(storeId).then(res => {
+        if (res.status === 200) {
+          observer.next(res.msg || []);
+        } else {
+          observer.next([]);
+        }
+        observer.complete();
+      });
+    });
   }
 
-  saveMenuSet(menuSet: MenuSet) {
-    if (this.menuSets.find(ms => ms.id === menuSet.id)) {
-      this.menuSets = this.menuSets.map(ms => ms.id === menuSet.id ? menuSet : ms);
-    } else {
-      this.menuSets = [...this.menuSets, menuSet];
-    }
-    this.menuSets$.next(this.menuSets);
+  async saveMenuSet(menuSet: any): Promise<IResponseMessage> {
+    return await this.apisService.upsertMenuSet(menuSet);
   }
 }

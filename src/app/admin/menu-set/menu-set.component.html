@@ -39,10 +39,23 @@
         </div>
 
         <form [formGroup]="setForm" (ngSubmit)="onSubmit()">
-            <div class="form-group">
-                <label for="name">{{ 'SET.NAME' | translate }} <span class="required">*</span></label>
-                <input type="text" id="name" formControlName="name" class="form-control"
-                    placeholder="e.g. Breakfast Combo">
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label for="name">{{ 'SET.NAME_TH' | translate }} <span class="required">*</span></label>
+                    <input type="text" id="name" formControlName="name" class="form-control"
+                        placeholder="เช่น มื้อเช้าสุดคุ้ม">
+                </div>
+                <div class="form-group flex-1">
+                    <label for="nameEn">{{ 'SET.NAME_EN' | translate }}</label>
+                    <input type="text" id="nameEn" formControlName="nameEn" class="form-control"
+                        placeholder="e.g. Breakfast Combo">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="width: 120px;">
+                    <label for="sortOrder">Sort Order</label>
+                    <input type="number" id="sortOrder" formControlName="sortOrder" class="form-control">
+                </div>
             </div>
 
             <div class="form-group" *ngIf="menus && menus.length > 0">
@@ -84,8 +97,20 @@
         <div class="sets-grid" *ngIf="(menuSets$ | async) as menuSets">
             <div class="set-card" *ngFor="let set of menuSets">
                 <div class="set-header">
-                    <h3>{{ set.name }}</h3>
-                    <span class="badge">{{ set.menuIds.length }} Items</span>
+                    <div>
+                        <h3>{{ set.name }}</h3>
+                        <div class="text-xs text-muted mb-2" *ngIf="set.nameEn">{{ set.nameEn }}</div>
+                        <span class="badge">{{ set.menuIds.length }} Items</span>
+                        <span class="badge badge-outline ml-2">Order: {{ set.sortOrder }}</span>
+                    </div>
+                    <div class="set-actions" *ngIf="authService.hasPermission('manage_menus')">
+                        <button class="btn-icon-sm" (click)="editSet(set)" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="btn-icon-sm btn-danger" (click)="deleteSet(set.id)" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="set-body">
                     <ul class="set-items">

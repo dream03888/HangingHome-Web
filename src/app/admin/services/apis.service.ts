@@ -20,13 +20,13 @@ export type IResponseStatus = 200 | 201 | 404 | 500
 export class ApisService {
   constructor(public socket: SocketSupplyService) { }
 
-  async CreateStore(name: string, name_eng: string, description: string, is_stock_enabled: boolean = false, allow_tables: boolean = false, table_count: number = 0): Promise<IResponseMessage> {
-    await this.socket.emit('CreateStore', { name, name_eng, description, is_stock_enabled, allow_tables, table_count });
+  async CreateStore(name: string, name_eng: string, description: string, is_stock_enabled: boolean = false, allow_tables: boolean = false, table_count: number = 0, store_code: string = '', hardware_config: any = {}): Promise<IResponseMessage> {
+    await this.socket.emit('CreateStore', { name, name_eng, description, is_stock_enabled, allow_tables, table_count, store_code, hardware_config });
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_CreateStore');
   }
 
-  async UpdateStore(id: string, name: string, name_eng: string, description: string, is_stock_enabled: boolean = false, allow_tables: boolean = false, table_count: number = 0): Promise<IResponseMessage> {
-    await this.socket.emit('updateStore', { id, name, name_eng, description, is_stock_enabled, allow_tables, table_count });
+  async UpdateStore(id: string, name: string, name_eng: string, description: string, is_stock_enabled: boolean = false, allow_tables: boolean = false, table_count: number = 0, store_code: string = '', hardware_config: any = {}): Promise<IResponseMessage> {
+    await this.socket.emit('updateStore', { id, name, name_eng, description, is_stock_enabled, allow_tables, table_count, store_code, hardware_config });
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_updateStore');
   }
 
@@ -68,6 +68,11 @@ export class ApisService {
   async getSyncStatus(master_product_id: string): Promise<IResponseMessage> {
     await this.socket.emit('getSyncStatus', master_product_id);
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getSyncStatus');
+  }
+
+  async unsyncProductFromStore(master_product_id: string, store_id: string): Promise<IResponseMessage> {
+    await this.socket.emit('unsyncProductFromStore', { master_product_id, store_id });
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_unsyncProductFromStore');
   }
 
   // --- File Upload ---
@@ -127,14 +132,29 @@ export class ApisService {
   }
 
   // --- Dashboard ---
-  async getSalesSummary(storeId: string): Promise<IResponseMessage> {
-    await this.socket.emit('getSalesSummary', storeId);
+  async getSalesSummary(data: { storeId: string, startDate?: string, endDate?: string }): Promise<IResponseMessage> {
+    await this.socket.emit('getSalesSummary', data);
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getSalesSummary');
   }
 
-  async getTopSellingItems(storeId: string): Promise<IResponseMessage> {
-    await this.socket.emit('getTopSellingItems', storeId);
+  async getTopSellingItems(data: { storeId: string, startDate?: string, endDate?: string }): Promise<IResponseMessage> {
+    await this.socket.emit('getTopSellingItems', data);
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getTopSellingItems');
+  }
+
+  async getBuyPerBillDashboard(data: { storeId: string, startDate: string, endDate: string }): Promise<IResponseMessage> {
+    await this.socket.emit('getBuyPerBillDashboard', data);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getBuyPerBillDashboard');
+  }
+
+  async getProductSalesDashboard(data: { storeId: string, startDate: string, endDate: string }): Promise<IResponseMessage> {
+    await this.socket.emit('getProductSalesDashboard', data);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getProductSalesDashboard');
+  }
+
+  async getPaymentDashboard(data: { storeId: string, startDate: string, endDate: string }): Promise<IResponseMessage> {
+    await this.socket.emit('getPaymentDashboard', data);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getPaymentDashboard');
   }
 
   // --- Inventory & Stock --- //
@@ -328,6 +348,11 @@ export class ApisService {
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_deleteMember');
   }
 
+  async deleteMemberGroup(id: string): Promise<IResponseMessage> {
+    await this.socket.emit('deleteMemberGroup', id);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_deleteMemberGroup');
+  }
+
   async getMemberTransactions(memberId: string): Promise<IResponseMessage> {
     await this.socket.emit('getMemberTransactions', memberId);
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getMemberTransactions');
@@ -368,6 +393,16 @@ export class ApisService {
   async getMenuSets(store_id: string): Promise<IResponseMessage> {
     await this.socket.emit('getMenuSets', store_id);
     return await this.socket.fromOneTimeEvent<IResponseMessage>('return_getMenuSets');
+  }
+
+  async upsertMenuSet(data: any): Promise<IResponseMessage> {
+    await this.socket.emit('upsertMenuSet', data);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_upsertMenuSet');
+  }
+
+  async deleteMenuSet(id: string): Promise<IResponseMessage> {
+    await this.socket.emit('deleteMenuSet', id);
+    return await this.socket.fromOneTimeEvent<IResponseMessage>('return_deleteMenuSet');
   }
 
   async updatePaymentConfig(data: { config_key: string, config_value: any }): Promise<IResponseMessage> {

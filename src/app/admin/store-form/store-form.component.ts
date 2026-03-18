@@ -7,6 +7,8 @@ import { AuthService } from '../services/auth.service';
 import { Store } from '../models/admin.models';
 import { ApisService } from '../services/apis.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
+import { environment } from '../../environments/environment';
+
 
 @Component({
   selector: 'app-store-form',
@@ -26,6 +28,8 @@ export class StoreFormComponent implements OnInit {
   storeForm!: FormGroup;
   isEditMode = false;
   storeId: string | null = null;
+  signagePreview: string | null = null;
+  selectedSignageFile: File | null = null;
 
   constructor(private apisService: ApisService) {
 
@@ -38,7 +42,9 @@ export class StoreFormComponent implements OnInit {
       description: [''],
       isStockEnabled: [false],
       allowTables: [false],
-      tableCount: [0]
+      tableCount: [0],
+      store_code: [''],
+      signage_url: ['']
     });
 
     this.route.paramMap.subscribe(params => {
@@ -53,14 +59,30 @@ export class StoreFormComponent implements OnInit {
             description: store.description,
             isStockEnabled: store.is_stock_enabled || false,
             allowTables: store.allow_tables || false,
-            tableCount: store.table_count || 0
+            tableCount: store.table_count || 0,
+            store_code: store.store_code || '',
+            signage_url: store.hardware_config?.signage_url || ''
           });
+          const path = store.hardware_config?.signage_url;
+          this.signagePreview = path ? path.startsWith('http') ? path : `${environment.API_URL}${path}` : null;
         }
       }
     });
 
     if (!this.authService.hasPermission('manage_store')) {
       this.storeForm.disable();
+    }
+  }
+
+  onSignageFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedSignageFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.signagePreview = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -79,27 +101,47 @@ export class StoreFormComponent implements OnInit {
       is_stock_enabled: formValue.isStockEnabled,
       allow_tables: formValue.allowTables,
       table_count: formValue.tableCount,
+      store_code: formValue.store_code,
+      hardware_config: {
+        signage_url: formValue.signage_url
+      },
       createdAt: new Date()
     };
 
+    if (this.selectedSignageFile) {
+      try {
+        let uploadedUrl = await this.apisService.uploadImage(this.selectedSignageFile);
+        // Store only the relative path if it contains the API_URL
+        if (uploadedUrl.startsWith(environment.API_URL)) {
+          uploadedUrl = uploadedUrl.replace(environment.API_URL, '');
+        }
+        if (!store.hardware_config) store.hardware_config = {};
+        store.hardware_config.signage_url = uploadedUrl;
+      } catch (error) {
+        console.error('Failed to upload signage', error);
+      }
+    }
+
     let res;
     if (this.isEditMode && this.storeId) {
-      res = await this.apisService.UpdateStore(this.storeId, store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled, formValue.allowTables, formValue.tableCount);
+      res = await this.apisService.UpdateStore(this.storeId, store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled, formValue.allowTables, formValue.tableCount, store.store_code, store.hardware_config);
     } else {
-      res = await this.apisService.CreateStore(store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled, formValue.allowTables, formValue.tableCount);
+      res = await this.apisService.CreateStore(store.name, store.name_eng || '', store.description?.toString() || '', formValue.isStockEnabled, formValue.allowTables, formValue.tableCount, store.store_code, store.hardware_config);
     }
 
     if (res.status == 200) {
       console.log(this.isEditMode ? 'UpdateStore' : 'CreateStore', res.msg);
 
       if (this.isEditMode) {
-        this.adminData.updateStore(store.id, { 
-          name: store.name, 
-          name_eng: store.name_eng, 
-          description: store.description, 
+        this.adminData.updateStore(store.id, {
+          name: store.name,
+          name_eng: store.name_eng,
+          description: store.description,
           is_stock_enabled: store.is_stock_enabled,
           allow_tables: store.allow_tables,
-          table_count: store.table_count
+          table_count: store.table_count,
+          store_code: store.store_code,
+          hardware_config: store.hardware_config
         });
       } else {
         this.adminData.saveStore(store);

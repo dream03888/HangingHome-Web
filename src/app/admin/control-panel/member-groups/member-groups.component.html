@@ -1,0 +1,56 @@
+<div class="admin-container">
+    <div class="page-header">
+        <div class="header-info">
+            <h1>Member Groups</h1>
+            <p>Manage membership tiers and discount levels</p>
+        </div>
+        <button class="btn btn-primary" (click)="addGroup()">
+            <span class="icon">+</span> Add New Group
+        </button>
+    </div>
+
+    <div class="content-body">
+        <div class="table-card shadow-sm">
+            <div class="loading-overlay" *ngIf="isLoading()">
+                <div class="spinner"></div>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th width="10%">ID</th>
+                        <th width="40%">Group Name</th>
+                        <th width="20%">Discount (%)</th>
+                        <th width="30%" class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let g of groups(); let i = index">
+                        <td class="id-cell">#{{ i + 1 }}</td>
+                        <td class="name-cell">
+                            <div class="group-name">{{ g.name }}</div>
+                        </td>
+                        <td>
+                            <span class="discount-badge">{{ g.discount_pct }}% OFF</span>
+                        </td>
+                        <td class="text-right">
+                            <button class="btn btn-icon btn-edit" title="Edit" (click)="editGroup(g)">
+                                <i class="codicon codicon-edit"></i>
+                            </button>
+                            <button class="btn btn-icon btn-delete" title="Delete" (click)="deleteGroup(g)">
+                                <i class="codicon codicon-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr *ngIf="groups().length === 0 && !isLoading()">
+                        <td colspan="4" class="empty-row">
+                            <div class="empty-state">
+                                <p>No member groups found. Start by adding one!</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

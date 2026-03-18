@@ -6,6 +6,13 @@ export interface Store {
     is_stock_enabled?: boolean; // Phase 3 Inventory Support
     allow_tables?: boolean;     // Phase 43 Table Booking
     table_count?: number;       // Phase 43 Table Booking
+    store_code?: string;
+    hardware_config?: {
+        printer_name?: string;
+        edc_port?: string;
+        edc_baudrate?: number;
+        signage_url?: string;
+    };
     createdAt: Date;
 }
 
@@ -37,6 +44,7 @@ export interface Menu {
     image_url?: string; // from SQL
     product_active: boolean; // from SQL
     promotion_id?: string | null;
+    menu_set_id?: string | null;
 
     // new DB fields
     discount_type?: 'amount' | 'percentage';
@@ -50,12 +58,19 @@ export interface Menu {
     items?: MenuOption[]; // mapped from DB's "items"
     master_product_id?: string | null; // links to master catalog
     linked_stores?: string[]; // Names of child stores using this master product
+    
+    // Inventory tracking
+    is_stock_tracked?: boolean;
+    stock_quantity?: number;
+    min_stock_level?: number;
 }
 
 export interface MenuSet {
     id: string;
     storeId: string;
     name: string;
+    nameEn?: string;
+    sortOrder?: number;
     menuIds: string[];
 }
 

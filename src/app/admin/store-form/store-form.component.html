@@ -37,12 +37,17 @@
                     <input type="text" id="nameEn" formControlName="nameEn" class="form-control"
                         placeholder="e.g. Sukhumvit Branch">
                 </div>
+                <div class="form-group flex-1">
+                    <label for="store_code">{{ 'STORE.CODE' | translate }} <span class="required">*</span></label>
+                    <input type="text" id="store_code" formControlName="store_code" class="form-control"
+                        placeholder="e.g. HG01">
+                    <small class="text-muted">{{ 'STORE.CODE_HINT' | translate }}</small>
+                </div>
             </div>
 
             <!-- Store Description -->
             <div class="form-group">
-                <label for="description">{{ 'STORE.DESC' | translate }} <span
-                        class="text-muted">(Optional)</span></label>
+                <label for="description">{{ 'STORE.DESC_OPTIONAL' | translate }}</label>
                 <textarea id="description" formControlName="description" class="form-control" rows="4"></textarea>
             </div>
 
@@ -51,8 +56,8 @@
                 <label class="toggle-container"
                     style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface);">
                     <div class="toggle-info" style="flex: 1;">
-                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">Enable Stock Management</span>
-                        <span style="font-size: 0.875rem; color: var(--text-sub);">Opt-in inventory tracking and recipe BOMs for this store.</span>
+                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">{{ 'STORE.ENABLE_STOCK' | translate }}</span>
+                        <span style="font-size: 0.875rem; color: var(--text-sub);">{{ 'STORE.STOCK_HINT' | translate }}</span>
                     </div>
                     <label class="toggle-switch ml-4">
                         <input type="checkbox" formControlName="isStockEnabled">
@@ -66,8 +71,8 @@
                 <label class="toggle-container"
                     style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface);">
                     <div class="toggle-info" style="flex: 1;">
-                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">Enable Table Service (Booking)</span>
-                        <span style="font-size: 0.875rem; color: var(--text-sub);">Allow customers to select tables for Dine-In orders.</span>
+                        <span style="font-weight: 500; display: block; margin-bottom: 0.25rem;">{{ 'STORE.ENABLE_TABLE' | translate }}</span>
+                        <span style="font-size: 0.875rem; color: var(--text-sub);">{{ 'STORE.TABLE_HINT' | translate }}</span>
                     </div>
                     <label class="toggle-switch ml-4">
                         <input type="checkbox" formControlName="allowTables">
@@ -77,9 +82,22 @@
             </div>
 
             <div class="form-group" *ngIf="storeForm.get('allowTables')?.value" style="margin-top: 0.5rem; padding-left: 1rem;">
-                <label for="tableCount">Number of Tables</label>
+                <label for="tableCount">{{ 'STORE.TABLE_COUNT' | translate }}</label>
                 <input type="number" id="tableCount" formControlName="tableCount" class="form-control" style="max-width: 150px;" placeholder="e.g. 10">
-                <small class="text-muted">Total available tables for this branch.</small>
+                <small class="text-muted">{{ 'STORE.TABLE_COUNT_HINT' | translate }}</small>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>{{ 'STORE.SIGNAGE_FILE' | translate }}</label>
+                <div class="file-upload-container" style="margin-top: 0.5rem;">
+                    <input type="file" (change)="onSignageFileSelected($event)" accept="image/*,video/*" class="form-control" style="margin-bottom: 0.5rem;">
+                    <small class="text-muted">{{ 'STORE.SIGNAGE_FILE_HINT' | translate }}</small>
+                    
+                    <div class="preview-container" *ngIf="signagePreview" style="margin-top: 1rem; max-width: 300px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-soft);">
+                        <img *ngIf="!signagePreview.includes('video')" [src]="signagePreview" style="width: 100%; display: block;" alt="Signage Preview">
+                        <video *ngIf="signagePreview.includes('video')" [src]="signagePreview" controls style="width: 100%; display: block;"></video>
+                    </div>
+                </div>
             </div>
 
             <!-- Actions -->

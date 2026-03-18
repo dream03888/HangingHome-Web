@@ -46,6 +46,8 @@ export class MenuFormComponent implements OnInit {
   isMasterLinked = false;
   alreadySyncedStoreIds: Set<string> = new Set();
 
+  menuSets: any[] = [];
+
   ngOnInit() {
     this.menuForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -54,6 +56,10 @@ export class MenuFormComponent implements OnInit {
       isActive: [true],
       imageUrl: [''],
       promotionId: [''],
+      menuSetId: [''],
+      isStockTracked: [false],
+      stockQuantity: [0],
+      minStockLevel: [0],
       options: this.fb.array([])
     });
 
@@ -64,6 +70,7 @@ export class MenuFormComponent implements OnInit {
 
       await this.loadStore(this.storeId);
       await this.loadPromotions();
+      await this.loadMenuSets(this.storeId);
 
       if (this.menuId) {
         this.isEditMode = true;
@@ -121,7 +128,11 @@ export class MenuFormComponent implements OnInit {
             price: menu.price,
             product_active: menu.product_active,
             imageUrl: menu.image_url || '',
-            promotionId: menu.promotion_id || ''
+            promotionId: menu.promotion_id || '',
+            menuSetId: menu.menu_set_id || '',
+            isStockTracked: menu.is_stock_tracked || false,
+            stockQuantity: menu.stock_quantity || 0,
+            minStockLevel: menu.min_stock_level || 0
           });
 
           if (this.isMasterCatalog && menuId) {
@@ -279,8 +290,12 @@ export class MenuFormComponent implements OnInit {
       discount_type: discount_type,
       discount_value: discount_value,
       promotion_id: formValue.promotionId || null,
+      menu_set_id: formValue.menuSetId || null,
+      is_stock_tracked: formValue.isStockTracked,
+      stock_quantity: formValue.stockQuantity,
+      min_stock_level: formValue.minStockLevel,
       items: dbItems
-    };
+    } as any;
   }
 
   async loadPromotions() {
@@ -294,6 +309,17 @@ export class MenuFormComponent implements OnInit {
       }
     } catch (e) {
       console.error('Error fetching global promotions', e);
+    }
+  }
+  
+  async loadMenuSets(storeId: string) {
+    try {
+      const res = await this.apisService.getMenuSets(storeId);
+      if (res.status === 200) {
+        this.menuSets = res.msg || [];
+      }
+    } catch (error) {
+      console.error('Failed to load menu sets', error);
     }
   }
 
@@ -356,6 +382,24 @@ export class MenuFormComponent implements OnInit {
       }
     } catch (error) {
       console.error('Failed to fetch sync status', error);
+    }
+  }
+
+  async unsyncFromStore(targetStoreId: string) {
+    if (!this.menuId) return;
+    if (!confirm('Are you sure you want to remove this product from the store?')) return;
+
+    try {
+      const res = await this.apisService.unsyncProductFromStore(this.menuId, targetStoreId);
+      if (res.status === 200) {
+        // Refresh sync status
+        await this.fetchSyncStatus(this.menuId);
+      } else {
+        alert('Failed to unsync: ' + res.msg);
+      }
+    } catch (error) {
+      console.error('Error unsyncing product:', error);
+      alert('System error during unsync.');
     }
   }
 
